@@ -1,0 +1,583 @@
+student_id,subject_name,semester,attempt_number,status
+1,Mathematics,5,3,ACTIVE
+1,Programming,5,3,ACTIVE
+1,Data Structures,5,2,ACTIVE
+1,Electronics,5,2,ACTIVE
+2,Mathematics,6,3,CLEARED
+2,Programming,6,3,CLEARED
+3,Mathematics,6,1,ACTIVE
+3,Programming,6,1,ACTIVE
+4,Mathematics,3,2,ACTIVE
+4,Programming,3,1,ACTIVE
+7,Mathematics,1,3,ACTIVE
+7,Programming,1,3,ACTIVE
+8,Mathematics,7,3,ACTIVE
+8,Programming,7,2,ACTIVE
+8,Data Structures,7,2,ACTIVE
+8,Electronics,7,2,ACTIVE
+10,Mathematics,1,3,ACTIVE
+10,Programming,1,3,CLEARED
+11,Mathematics,2,3,ACTIVE
+11,Programming,2,2,ACTIVE
+13,Mathematics,5,2,ACTIVE
+14,Mathematics,7,1,ACTIVE
+14,Programming,7,2,ACTIVE
+15,Mathematics,1,2,ACTIVE
+15,Programming,1,2,CLEARED
+16,Mathematics,5,2,CLEARED
+17,Mathematics,7,1,ACTIVE
+17,Programming,7,2,ACTIVE
+19,Mathematics,3,2,ACTIVE
+19,Programming,3,1,ACTIVE
+19,Data Structures,3,2,ACTIVE
+20,Mathematics,6,1,ACTIVE
+21,Mathematics,3,2,ACTIVE
+21,Programming,3,2,ACTIVE
+22,Mathematics,1,2,CLEARED
+22,Programming,1,3,ACTIVE
+24,Mathematics,7,1,ACTIVE
+24,Programming,7,1,ACTIVE
+25,Mathematics,1,2,ACTIVE
+25,Programming,1,3,ACTIVE
+25,Data Structures,1,2,ACTIVE
+25,Electronics,1,3,ACTIVE
+27,Mathematics,5,3,CLEARED
+30,Mathematics,4,1,ACTIVE
+31,Mathematics,4,3,ACTIVE
+31,Programming,4,2,ACTIVE
+31,Data Structures,4,2,ACTIVE
+34,Mathematics,1,3,CLEARED
+35,Mathematics,5,3,CLEARED
+38,Mathematics,1,2,CLEARED
+38,Programming,1,2,ACTIVE
+40,Mathematics,5,1,ACTIVE
+40,Programming,5,2,ACTIVE
+41,Mathematics,3,2,CLEARED
+42,Mathematics,4,1,ACTIVE
+42,Programming,4,2,ACTIVE
+43,Mathematics,6,3,ACTIVE
+43,Programming,6,3,ACTIVE
+43,Data Structures,6,3,ACTIVE
+45,Mathematics,4,1,ACTIVE
+45,Programming,4,2,ACTIVE
+46,Mathematics,1,2,ACTIVE
+46,Programming,1,3,ACTIVE
+47,Mathematics,5,2,CLEARED
+49,Mathematics,6,2,ACTIVE
+50,Mathematics,6,2,CLEARED
+53,Mathematics,7,3,ACTIVE
+53,Programming,7,3,ACTIVE
+54,Mathematics,1,2,ACTIVE
+54,Programming,1,2,ACTIVE
+55,Mathematics,1,2,ACTIVE
+55,Programming,1,3,ACTIVE
+56,Mathematics,5,3,ACTIVE
+56,Programming,5,2,ACTIVE
+56,Data Structures,5,3,ACTIVE
+57,Mathematics,5,3,ACTIVE
+58,Mathematics,7,1,ACTIVE
+61,Mathematics,3,1,ACTIVE
+61,Programming,3,2,ACTIVE
+62,Mathematics,2,2,CLEARED
+62,Programming,2,3,ACTIVE
+63,Mathematics,2,2,ACTIVE
+63,Programming,2,2,ACTIVE
+64,Mathematics,5,2,ACTIVE
+64,Programming,5,2,ACTIVE
+64,Data Structures,5,3,ACTIVE
+65,Mathematics,2,1,ACTIVE
+65,Programming,2,1,ACTIVE
+66,Mathematics,5,2,ACTIVE
+67,Mathematics,5,1,ACTIVE
+70,Mathematics,6,2,CLEARED
+72,Mathematics,2,3,ACTIVE
+73,Mathematics,1,2,ACTIVE
+73,Programming,1,1,ACTIVE
+73,Data Structures,1,2,ACTIVE
+78,Mathematics,4,2,ACTIVE
+78,Programming,4,1,ACTIVE
+79,Mathematics,4,1,ACTIVE
+80,Mathematics,4,2,ACTIVE
+80,Programming,4,2,ACTIVE
+80,Data Structures,4,2,ACTIVE
+80,Electronics,4,3,ACTIVE
+81,Mathematics,1,1,ACTIVE
+81,Programming,1,2,ACTIVE
+82,Mathematics,2,3,CLEARED
+82,Programming,2,2,ACTIVE
+83,Mathematics,4,3,ACTIVE
+83,Programming,4,3,ACTIVE
+83,Data Structures,4,3,ACTIVE
+87,Mathematics,1,3,ACTIVE
+87,Programming,1,3,ACTIVE
+87,Data Structures,1,2,ACTIVE
+87,Electronics,1,2,ACTIVE
+88,Mathematics,3,2,CLEARED
+90,Mathematics,7,2,ACTIVE
+92,Mathematics,7,1,ACTIVE
+93,Mathematics,2,3,CLEARED
+93,Programming,2,2,CLEARED
+94,Mathematics,5,3,CLEARED
+96,Mathematics,3,2,ACTIVE
+96,Programming,3,1,ACTIVE
+97,Mathematics,1,3,CLEARED
+98,Mathematics,1,2,CLEARED
+101,Mathematics,2,1,ACTIVE
+101,Programming,2,1,ACTIVE
+102,Mathematics,7,1,ACTIVE
+102,Programming,7,2,ACTIVE
+105,Mathematics,5,2,ACTIVE
+105,Programming,5,3,ACTIVE
+105,Data Structures,5,3,ACTIVE
+105,Electronics,5,2,ACTIVE
+106,Mathematics,2,2,ACTIVE
+106,Programming,2,2,ACTIVE
+106,Data Structures,2,2,ACTIVE
+107,Mathematics,1,2,CLEARED
+110,Mathematics,5,2,ACTIVE
+110,Programming,5,2,ACTIVE
+111,Mathematics,6,3,CLEARED
+111,Programming,6,3,CLEARED
+114,Mathematics,7,2,ACTIVE
+114,Programming,7,2,ACTIVE
+116,Mathematics,4,1,ACTIVE
+116,Programming,4,1,ACTIVE
+116,Data Structures,4,1,ACTIVE
+117,Mathematics,1,2,ACTIVE
+117,Programming,1,2,ACTIVE
+118,Mathematics,6,3,ACTIVE
+118,Programming,6,3,ACTIVE
+119,Mathematics,2,3,CLEARED
+120,Mathematics,5,1,ACTIVE
+120,Programming,5,2,ACTIVE
+121,Mathematics,5,1,ACTIVE
+121,Programming,5,2,ACTIVE
+122,Mathematics,1,2,ACTIVE
+124,Mathematics,6,3,CLEARED
+124,Programming,6,2,CLEARED
+126,Mathematics,4,3,ACTIVE
+128,Mathematics,1,2,CLEARED
+130,Mathematics,2,1,ACTIVE
+130,Programming,2,1,ACTIVE
+133,Mathematics,4,1,ACTIVE
+134,Mathematics,6,2,CLEARED
+135,Mathematics,4,2,ACTIVE
+138,Mathematics,3,3,CLEARED
+139,Mathematics,7,3,ACTIVE
+139,Programming,7,3,ACTIVE
+139,Data Structures,7,2,ACTIVE
+141,Mathematics,1,2,CLEARED
+141,Programming,1,3,ACTIVE
+142,Mathematics,7,3,ACTIVE
+142,Programming,7,2,CLEARED
+143,Mathematics,3,2,CLEARED
+144,Mathematics,5,2,ACTIVE
+145,Mathematics,5,2,ACTIVE
+148,Mathematics,4,1,ACTIVE
+149,Mathematics,5,3,CLEARED
+151,Mathematics,7,1,ACTIVE
+151,Programming,7,2,ACTIVE
+152,Mathematics,2,2,ACTIVE
+152,Programming,2,2,ACTIVE
+152,Data Structures,2,2,ACTIVE
+153,Mathematics,3,2,CLEARED
+154,Mathematics,4,2,ACTIVE
+155,Mathematics,3,2,CLEARED
+156,Mathematics,2,2,ACTIVE
+156,Programming,2,2,ACTIVE
+158,Mathematics,1,2,ACTIVE
+159,Mathematics,7,3,ACTIVE
+159,Programming,7,3,ACTIVE
+159,Data Structures,7,3,ACTIVE
+160,Mathematics,7,3,ACTIVE
+160,Programming,7,2,ACTIVE
+162,Mathematics,1,2,ACTIVE
+162,Programming,1,2,ACTIVE
+162,Data Structures,1,1,ACTIVE
+165,Mathematics,6,2,ACTIVE
+165,Programming,6,1,ACTIVE
+166,Mathematics,1,2,CLEARED
+167,Mathematics,7,1,ACTIVE
+167,Programming,7,1,ACTIVE
+167,Data Structures,7,1,ACTIVE
+168,Mathematics,7,3,ACTIVE
+168,Programming,7,3,ACTIVE
+168,Data Structures,7,3,ACTIVE
+168,Electronics,7,3,ACTIVE
+170,Mathematics,3,2,CLEARED
+172,Mathematics,2,2,ACTIVE
+172,Programming,2,1,ACTIVE
+175,Mathematics,1,2,CLEARED
+177,Mathematics,2,3,CLEARED
+177,Programming,2,2,CLEARED
+178,Mathematics,5,2,CLEARED
+179,Mathematics,1,1,ACTIVE
+179,Programming,1,2,ACTIVE
+179,Data Structures,1,2,ACTIVE
+180,Mathematics,4,2,ACTIVE
+180,Programming,4,2,ACTIVE
+180,Data Structures,4,3,ACTIVE
+180,Electronics,4,2,ACTIVE
+181,Mathematics,4,1,ACTIVE
+181,Programming,4,1,ACTIVE
+182,Mathematics,2,2,ACTIVE
+182,Programming,2,2,ACTIVE
+182,Data Structures,2,2,ACTIVE
+183,Mathematics,7,2,ACTIVE
+185,Mathematics,4,3,ACTIVE
+185,Programming,4,2,ACTIVE
+185,Data Structures,4,2,ACTIVE
+185,Electronics,4,2,ACTIVE
+186,Mathematics,2,2,ACTIVE
+187,Mathematics,3,2,CLEARED
+187,Programming,3,2,CLEARED
+189,Mathematics,2,3,ACTIVE
+189,Programming,2,2,ACTIVE
+189,Data Structures,2,3,ACTIVE
+189,Electronics,2,2,ACTIVE
+194,Mathematics,2,2,ACTIVE
+194,Programming,2,1,ACTIVE
+197,Mathematics,4,2,ACTIVE
+197,Programming,4,2,ACTIVE
+198,Mathematics,6,2,ACTIVE
+198,Programming,6,2,ACTIVE
+201,Mathematics,1,3,ACTIVE
+201,Programming,1,2,ACTIVE
+201,Data Structures,1,3,ACTIVE
+203,Mathematics,3,1,ACTIVE
+203,Programming,3,2,ACTIVE
+204,Mathematics,3,2,CLEARED
+208,Mathematics,4,1,ACTIVE
+208,Programming,4,2,ACTIVE
+209,Mathematics,7,2,CLEARED
+210,Mathematics,3,1,ACTIVE
+211,Mathematics,2,1,ACTIVE
+212,Mathematics,5,1,ACTIVE
+212,Programming,5,1,ACTIVE
+214,Mathematics,5,3,ACTIVE
+214,Programming,5,3,ACTIVE
+214,Data Structures,5,3,ACTIVE
+214,Electronics,5,2,ACTIVE
+215,Mathematics,5,3,ACTIVE
+215,Programming,5,3,ACTIVE
+216,Mathematics,3,2,ACTIVE
+216,Programming,3,3,ACTIVE
+219,Mathematics,2,2,CLEARED
+220,Mathematics,7,2,ACTIVE
+222,Mathematics,6,2,CLEARED
+223,Mathematics,5,2,ACTIVE
+228,Mathematics,4,1,ACTIVE
+228,Programming,4,2,ACTIVE
+229,Mathematics,7,1,ACTIVE
+232,Mathematics,3,3,CLEARED
+234,Mathematics,2,2,ACTIVE
+236,Mathematics,1,2,ACTIVE
+236,Programming,1,3,ACTIVE
+236,Data Structures,1,2,ACTIVE
+236,Electronics,1,3,ACTIVE
+237,Mathematics,1,3,CLEARED
+238,Mathematics,2,2,ACTIVE
+238,Programming,2,2,ACTIVE
+238,Data Structures,2,3,ACTIVE
+241,Mathematics,1,1,ACTIVE
+241,Programming,1,1,ACTIVE
+241,Data Structures,1,2,ACTIVE
+242,Mathematics,1,2,ACTIVE
+242,Programming,1,2,ACTIVE
+244,Mathematics,3,1,ACTIVE
+245,Mathematics,1,2,ACTIVE
+246,Mathematics,7,1,ACTIVE
+246,Programming,7,2,ACTIVE
+246,Data Structures,7,1,ACTIVE
+247,Mathematics,1,2,ACTIVE
+247,Programming,1,1,ACTIVE
+248,Mathematics,1,3,CLEARED
+249,Mathematics,5,2,CLEARED
+250,Mathematics,4,2,CLEARED
+250,Programming,4,2,ACTIVE
+251,Mathematics,4,2,ACTIVE
+251,Programming,4,1,ACTIVE
+252,Mathematics,6,2,ACTIVE
+252,Programming,6,2,ACTIVE
+253,Mathematics,7,2,CLEARED
+256,Mathematics,1,2,ACTIVE
+256,Programming,1,3,ACTIVE
+257,Mathematics,2,2,ACTIVE
+257,Programming,2,2,ACTIVE
+257,Data Structures,2,3,ACTIVE
+257,Electronics,2,2,ACTIVE
+260,Mathematics,1,1,ACTIVE
+260,Programming,1,2,ACTIVE
+261,Mathematics,1,2,CLEARED
+262,Mathematics,2,1,ACTIVE
+262,Programming,2,2,ACTIVE
+262,Data Structures,2,2,ACTIVE
+266,Mathematics,2,2,CLEARED
+274,Mathematics,2,2,ACTIVE
+275,Mathematics,6,1,ACTIVE
+276,Mathematics,6,2,ACTIVE
+278,Mathematics,7,2,ACTIVE
+278,Programming,7,2,ACTIVE
+279,Mathematics,1,2,ACTIVE
+279,Programming,1,2,ACTIVE
+280,Mathematics,7,1,ACTIVE
+280,Programming,7,1,ACTIVE
+280,Data Structures,7,1,ACTIVE
+283,Mathematics,1,2,CLEARED
+285,Mathematics,6,1,ACTIVE
+286,Mathematics,1,2,CLEARED
+286,Programming,1,3,CLEARED
+288,Mathematics,5,3,ACTIVE
+288,Programming,5,2,CLEARED
+289,Mathematics,1,1,ACTIVE
+291,Mathematics,7,1,ACTIVE
+291,Programming,7,2,ACTIVE
+295,Mathematics,1,1,ACTIVE
+295,Programming,1,2,ACTIVE
+295,Data Structures,1,1,ACTIVE
+296,Mathematics,4,2,ACTIVE
+296,Programming,4,1,ACTIVE
+296,Data Structures,4,1,ACTIVE
+298,Mathematics,1,2,ACTIVE
+298,Programming,1,2,ACTIVE
+299,Mathematics,2,2,ACTIVE
+299,Programming,2,2,ACTIVE
+300,Mathematics,6,1,ACTIVE
+300,Programming,6,2,ACTIVE
+301,Mathematics,1,3,ACTIVE
+301,Programming,1,3,ACTIVE
+301,Data Structures,1,2,ACTIVE
+301,Electronics,1,2,ACTIVE
+303,Mathematics,6,1,ACTIVE
+304,Mathematics,5,2,ACTIVE
+305,Mathematics,1,2,ACTIVE
+305,Programming,1,2,ACTIVE
+305,Data Structures,1,2,ACTIVE
+306,Mathematics,3,3,CLEARED
+307,Mathematics,6,2,CLEARED
+308,Mathematics,2,2,ACTIVE
+308,Programming,2,1,ACTIVE
+311,Mathematics,2,2,CLEARED
+312,Mathematics,6,2,CLEARED
+312,Programming,6,2,ACTIVE
+314,Mathematics,6,2,CLEARED
+314,Programming,6,3,CLEARED
+315,Mathematics,7,2,CLEARED
+315,Programming,7,3,CLEARED
+317,Mathematics,3,3,CLEARED
+318,Mathematics,2,2,ACTIVE
+320,Mathematics,4,2,CLEARED
+321,Mathematics,1,1,ACTIVE
+321,Programming,1,2,ACTIVE
+322,Mathematics,4,2,CLEARED
+322,Programming,4,2,CLEARED
+324,Mathematics,7,2,ACTIVE
+324,Programming,7,1,ACTIVE
+325,Mathematics,3,1,ACTIVE
+325,Programming,3,2,ACTIVE
+325,Data Structures,3,2,ACTIVE
+326,Mathematics,7,2,ACTIVE
+326,Programming,7,1,ACTIVE
+327,Mathematics,5,3,ACTIVE
+327,Programming,5,3,ACTIVE
+328,Mathematics,2,1,ACTIVE
+328,Programming,2,1,ACTIVE
+329,Mathematics,3,2,ACTIVE
+329,Programming,3,1,ACTIVE
+330,Mathematics,4,2,CLEARED
+331,Mathematics,7,2,ACTIVE
+331,Programming,7,2,ACTIVE
+332,Mathematics,1,2,CLEARED
+333,Mathematics,6,1,ACTIVE
+333,Programming,6,2,ACTIVE
+334,Mathematics,1,2,ACTIVE
+334,Programming,1,1,ACTIVE
+336,Mathematics,7,1,ACTIVE
+338,Mathematics,1,3,ACTIVE
+338,Programming,1,2,ACTIVE
+338,Data Structures,1,3,ACTIVE
+339,Mathematics,4,2,CLEARED
+343,Mathematics,1,2,ACTIVE
+343,Programming,1,3,ACTIVE
+343,Data Structures,1,2,ACTIVE
+344,Mathematics,3,1,ACTIVE
+344,Programming,3,1,ACTIVE
+345,Mathematics,5,3,ACTIVE
+345,Programming,5,2,ACTIVE
+345,Data Structures,5,2,ACTIVE
+345,Electronics,5,2,ACTIVE
+346,Mathematics,1,2,ACTIVE
+346,Programming,1,3,ACTIVE
+346,Data Structures,1,3,ACTIVE
+349,Mathematics,1,2,ACTIVE
+351,Mathematics,1,1,ACTIVE
+353,Mathematics,3,1,ACTIVE
+353,Programming,3,1,ACTIVE
+354,Mathematics,2,2,ACTIVE
+354,Programming,2,1,ACTIVE
+355,Mathematics,1,2,CLEARED
+356,Mathematics,4,1,ACTIVE
+356,Programming,4,1,ACTIVE
+357,Mathematics,7,3,ACTIVE
+357,Programming,7,2,ACTIVE
+357,Data Structures,7,3,ACTIVE
+358,Mathematics,2,3,ACTIVE
+358,Programming,2,2,ACTIVE
+359,Mathematics,1,3,ACTIVE
+360,Mathematics,6,2,ACTIVE
+365,Mathematics,6,1,ACTIVE
+366,Mathematics,2,3,CLEARED
+367,Mathematics,6,2,ACTIVE
+367,Programming,6,3,ACTIVE
+367,Data Structures,6,3,ACTIVE
+367,Electronics,6,2,ACTIVE
+368,Mathematics,7,2,ACTIVE
+370,Mathematics,6,1,ACTIVE
+370,Programming,6,2,ACTIVE
+371,Mathematics,3,3,ACTIVE
+371,Programming,3,3,ACTIVE
+373,Mathematics,7,2,CLEARED
+373,Programming,7,3,CLEARED
+378,Mathematics,7,2,CLEARED
+378,Programming,7,2,ACTIVE
+379,Mathematics,4,3,CLEARED
+380,Mathematics,5,3,ACTIVE
+380,Programming,5,2,ACTIVE
+381,Mathematics,6,2,ACTIVE
+381,Programming,6,2,ACTIVE
+383,Mathematics,1,2,ACTIVE
+383,Programming,1,3,ACTIVE
+383,Data Structures,1,2,ACTIVE
+384,Mathematics,4,3,CLEARED
+384,Programming,4,2,CLEARED
+385,Mathematics,6,3,CLEARED
+387,Mathematics,5,2,ACTIVE
+387,Programming,5,3,ACTIVE
+390,Mathematics,4,1,ACTIVE
+390,Programming,4,1,ACTIVE
+390,Data Structures,4,1,ACTIVE
+391,Mathematics,4,2,ACTIVE
+391,Programming,4,2,ACTIVE
+393,Mathematics,3,2,ACTIVE
+393,Programming,3,1,ACTIVE
+394,Mathematics,1,1,ACTIVE
+394,Programming,1,1,ACTIVE
+396,Mathematics,3,3,ACTIVE
+396,Programming,3,2,ACTIVE
+397,Mathematics,1,1,ACTIVE
+397,Programming,1,2,ACTIVE
+397,Data Structures,1,1,ACTIVE
+399,Mathematics,5,3,CLEARED
+399,Programming,5,3,ACTIVE
+400,Mathematics,2,3,CLEARED
+400,Programming,2,3,CLEARED
+402,Mathematics,4,2,ACTIVE
+402,Programming,4,1,ACTIVE
+402,Data Structures,4,1,ACTIVE
+403,Mathematics,4,2,ACTIVE
+403,Programming,4,3,ACTIVE
+403,Data Structures,4,2,ACTIVE
+403,Electronics,4,3,ACTIVE
+406,Mathematics,1,1,ACTIVE
+406,Programming,1,2,ACTIVE
+406,Data Structures,1,2,ACTIVE
+408,Mathematics,6,1,ACTIVE
+408,Programming,6,2,ACTIVE
+411,Mathematics,1,1,ACTIVE
+412,Mathematics,6,1,ACTIVE
+412,Programming,6,1,ACTIVE
+414,Mathematics,6,1,ACTIVE
+414,Programming,6,2,ACTIVE
+414,Data Structures,6,2,ACTIVE
+418,Mathematics,1,3,ACTIVE
+418,Programming,1,3,ACTIVE
+420,Mathematics,1,2,ACTIVE
+420,Programming,1,1,ACTIVE
+420,Data Structures,1,1,ACTIVE
+421,Mathematics,1,1,ACTIVE
+425,Mathematics,7,1,ACTIVE
+425,Programming,7,2,ACTIVE
+426,Mathematics,6,2,ACTIVE
+426,Programming,6,2,ACTIVE
+426,Data Structures,6,2,ACTIVE
+427,Mathematics,3,2,CLEARED
+428,Mathematics,4,2,ACTIVE
+428,Programming,4,2,ACTIVE
+428,Data Structures,4,2,ACTIVE
+430,Mathematics,5,3,ACTIVE
+430,Programming,5,3,ACTIVE
+431,Mathematics,1,2,CLEARED
+432,Mathematics,6,3,ACTIVE
+432,Programming,6,2,ACTIVE
+433,Mathematics,7,2,ACTIVE
+433,Programming,7,2,ACTIVE
+434,Mathematics,5,1,ACTIVE
+434,Programming,5,1,ACTIVE
+438,Mathematics,6,1,ACTIVE
+439,Mathematics,5,3,ACTIVE
+439,Programming,5,2,ACTIVE
+439,Data Structures,5,3,ACTIVE
+440,Mathematics,1,1,ACTIVE
+441,Mathematics,7,2,ACTIVE
+441,Programming,7,2,ACTIVE
+443,Mathematics,2,3,ACTIVE
+443,Programming,2,2,ACTIVE
+443,Data Structures,2,2,ACTIVE
+443,Electronics,2,3,ACTIVE
+445,Mathematics,2,2,CLEARED
+446,Mathematics,4,3,ACTIVE
+446,Programming,4,2,ACTIVE
+446,Data Structures,4,2,ACTIVE
+446,Electronics,4,3,ACTIVE
+448,Mathematics,2,2,ACTIVE
+448,Programming,2,1,ACTIVE
+449,Mathematics,1,2,CLEARED
+450,Mathematics,6,2,ACTIVE
+452,Mathematics,1,2,ACTIVE
+452,Programming,1,1,ACTIVE
+452,Data Structures,1,2,ACTIVE
+453,Mathematics,3,2,ACTIVE
+453,Programming,3,2,ACTIVE
+458,Mathematics,1,2,CLEARED
+458,Programming,1,3,CLEARED
+459,Mathematics,3,2,ACTIVE
+459,Programming,3,2,ACTIVE
+460,Mathematics,1,1,ACTIVE
+461,Mathematics,2,1,ACTIVE
+461,Programming,2,1,ACTIVE
+465,Mathematics,1,2,ACTIVE
+466,Mathematics,1,2,ACTIVE
+467,Mathematics,6,2,ACTIVE
+467,Programming,6,2,ACTIVE
+469,Mathematics,2,2,CLEARED
+470,Mathematics,4,1,ACTIVE
+471,Mathematics,7,3,ACTIVE
+472,Mathematics,1,3,ACTIVE
+477,Mathematics,6,3,ACTIVE
+478,Mathematics,6,1,ACTIVE
+478,Programming,6,1,ACTIVE
+479,Mathematics,4,2,ACTIVE
+479,Programming,4,2,ACTIVE
+480,Mathematics,3,3,CLEARED
+480,Programming,3,2,CLEARED
+481,Mathematics,7,2,ACTIVE
+483,Mathematics,7,1,ACTIVE
+486,Mathematics,3,2,CLEARED
+487,Mathematics,6,3,CLEARED
+489,Mathematics,1,2,ACTIVE
+490,Mathematics,2,1,ACTIVE
+491,Mathematics,1,2,ACTIVE
+491,Programming,1,3,ACTIVE
+492,Mathematics,6,2,ACTIVE
+492,Programming,6,2,ACTIVE
+493,Mathematics,7,2,ACTIVE
+493,Programming,7,2,ACTIVE
+495,Mathematics,5,2,ACTIVE
+495,Programming,5,3,ACTIVE
+496,Mathematics,4,1,ACTIVE
+496,Programming,4,2,ACTIVE
+497,Mathematics,1,3,CLEARED
+498,Mathematics,2,2,ACTIVE
+498,Programming,2,2,ACTIVE
+499,Mathematics,5,3,CLEARED
+500,Mathematics,1,1,ACTIVE

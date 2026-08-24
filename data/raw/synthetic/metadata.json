@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "generator": "Pathwise SyntheticDataGenerator",
+  "generated_at": "2026-08-24T14:50:17.440673+00:00",
+  "num_students": 500,
+  "seed": 42,
+  "trajectory_distribution": {
+    "STABLE": 176,
+    "GRADUALLY_DETERIORATING": 106,
+    "IMPROVING": 73,
+    "RAPIDLY_DETERIORATING": 63,
+    "ACADEMIC_DISTRESS_ONLY": 44,
+    "FINANCIAL_CONTEXT_ONLY": 38
+  },
+  "dropout_label_distribution": {
+    "0": 356,
+    "1": 144
+  },
+  "row_counts": {
+    "students_roster": 500,
+    "attendance": 7000,
+    "marks": 8000,
+    "fees": 948,
+    "attempts": 582
+  },
+  "warning": "This dataset is entirely synthetic and generated for Pathwise development/demo purposes. It must not be interpreted as evidence of real-world student dropout behaviour. trajectory_type is ground truth metadata and must NOT be used as an ML training input feature."
+}
