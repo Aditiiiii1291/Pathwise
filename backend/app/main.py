@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -6,10 +7,25 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+try:
+    from app.core.database import init_db
+    import app.models
+    from app.api.endpoints.uploads import router as uploads_router
+except ImportError:
+    from backend.app.core.database import init_db
+    import backend.app.models
+    from backend.app.api.endpoints.uploads import router as uploads_router
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
 app = FastAPI(
     title="Pathwise API",
     description="Early Warning & Intervention Intelligence for Student Retention",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # CORS configuration for local development
@@ -25,6 +41,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API routers
+app.include_router(uploads_router)
 
 @app.get("/")
 def read_root():
