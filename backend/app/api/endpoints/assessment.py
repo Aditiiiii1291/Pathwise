@@ -10,6 +10,7 @@ try:
     from app.services.ml_predictor import MLPredictor
     from app.services.fusion_engine import RiskFusionEngine
     from app.services.explainer import ExplanationEngine
+    from app.services.notifications import NotificationService
 except ImportError:
     from backend.app.core.database import get_db
     from backend.app.schemas.api import StudentAssessmentResponse
@@ -19,6 +20,7 @@ except ImportError:
     from backend.app.services.ml_predictor import MLPredictor
     from backend.app.services.fusion_engine import RiskFusionEngine
     from backend.app.services.explainer import ExplanationEngine
+    from backend.app.services.notifications import NotificationService
 
 router = APIRouter(prefix="/students", tags=["assessment"])
 
@@ -100,6 +102,13 @@ def calculate_and_save_student_assessment(
     db.add(snapshot)
     db.commit()
     db.refresh(snapshot)
+
+    # Phase 13: Evaluate notification triggers on meaningful risk/trend transitions
+    NotificationService.evaluate_and_create_notifications(
+        db=db,
+        student_id=student_id,
+        new_snapshot=snapshot,
+    )
 
     return StudentAssessmentResponse(
         student_id=student_id,

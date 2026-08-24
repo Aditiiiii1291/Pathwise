@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, Bell, ChevronDown, User } from 'lucide-react';
+import { Search, ChevronDown, User } from 'lucide-react';
 import PathwiseLogo from '../common/PathwiseLogo';
+import NotificationBellDropdown from '../notifications/NotificationBellDropdown';
 
 export default function Header() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,16 +43,8 @@ export default function Header() {
 
       {/* Right Controls / Notification & Profile */}
       <div className="flex items-center gap-3 shrink-0">
-        {/* Notification Bell (Placeholder for Phase 13) */}
-        <button
-          className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition"
-          title="Notifications (Phase 13)"
-        >
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
-            8
-          </span>
-        </button>
+        {/* In-App Notification Bell */}
+        <NotificationBellDropdown />
 
         <div className="h-6 w-px bg-slate-200/80 mx-1" />
 

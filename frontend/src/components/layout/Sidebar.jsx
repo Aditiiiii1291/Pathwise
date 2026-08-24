@@ -10,7 +10,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -19,14 +18,14 @@ export default function Sidebar() {
   const navItems = [
     { to: '/', label: 'Overview', icon: Home },
     { to: '/students', label: 'Students', icon: Users },
+    { to: '/notifications', label: 'Notifications', icon: Bell },
     { to: '/upload', label: 'Upload Data', icon: UploadCloud },
     { to: '/rules', label: 'Rule Engine', icon: Sliders },
   ];
 
   const secondaryItems = [
-    { label: 'Notifications', icon: Bell, disabled: true, tag: 'Phase 13' },
-    { label: 'Reports', icon: FileText, disabled: true, tag: 'Coming' },
-    { label: 'Settings', icon: Settings, disabled: true },
+    { label: 'Reports', icon: FileText, disabled: true, tag: 'Phase 15' },
+    { label: 'Settings', icon: Settings, disabled: true, tag: 'Phase 16' },
   ];
 
   return (
@@ -95,7 +94,7 @@ export default function Sidebar() {
       <div className="p-3 border-t border-slate-100/80 flex flex-col items-center">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-center gap-2 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition text-xs font-medium"
+          className="w-full flex items-center justify-center gap-2 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition text-xs font-medium cursor-pointer"
           title={isExpanded ? 'Collapse menu' : 'Expand menu'}
         >
           {isExpanded ? (

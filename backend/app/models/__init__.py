@@ -16,6 +16,7 @@ try:
     from app.models.notification import (
         Notification,
         NotificationTypeEnum,
+        NotificationSeverityEnum,
         RecipientTypeEnum,
         NotificationStatusEnum,
     )
@@ -37,6 +38,7 @@ except ImportError:
     from backend.app.models.notification import (
         Notification,
         NotificationTypeEnum,
+        NotificationSeverityEnum,
         RecipientTypeEnum,
         NotificationStatusEnum,
     )
@@ -61,6 +63,7 @@ __all__ = [
     "RuleConfig",
     "Notification",
     "NotificationTypeEnum",
+    "NotificationSeverityEnum",
     "RecipientTypeEnum",
     "NotificationStatusEnum",
 ]
