@@ -1,0 +1,194 @@
+{
+  "model_name": "Pathwise Dropout Detector",
+  "model_type": "RandomForestClassifier",
+  "model_version": "1.0.0",
+  "created_at": "2026-08-24T15:14:05.692536Z",
+  "synthetic_warning": "TRAINED ON SYNTHETIC COHORT DATASET. Metrics reflect development performance and require local institutional calibration.",
+  "random_seed": 42,
+  "total_samples": 500,
+  "train_samples": 400,
+  "test_samples": 100,
+  "feature_names": [
+    "attendance_current",
+    "attendance_mean",
+    "attendance_slope",
+    "attendance_decline_pp",
+    "attendance_recent_vs_historical",
+    "attendance_consecutive_decline",
+    "attendance_acceleration",
+    "attendance_history_count",
+    "has_sufficient_attendance_history",
+    "marks_current_avg",
+    "marks_mean",
+    "marks_slope",
+    "marks_decline_pp",
+    "marks_recent_vs_previous",
+    "marks_consecutive_failures",
+    "marks_failed_subject_count",
+    "marks_history_count",
+    "has_sufficient_marks_history",
+    "backlog_count_active",
+    "backlog_count_total",
+    "backlog_new_this_semester",
+    "backlog_trend_numeric",
+    "max_attempt_number",
+    "fee_percentage_paid",
+    "fee_terms_overdue",
+    "fee_pending_count"
+  ],
+  "metrics": {
+    "accuracy": 0.87,
+    "precision": 0.75,
+    "recall": 0.8276,
+    "f1_score": 0.7869,
+    "roc_auc": 0.9126,
+    "confusion_matrix": [
+      [
+        63,
+        8
+      ],
+      [
+        5,
+        24
+      ]
+    ]
+  },
+  "feature_importances": [
+    {
+      "feature": "marks_decline_pp",
+      "importance": 0.1555
+    },
+    {
+      "feature": "marks_slope",
+      "importance": 0.1546
+    },
+    {
+      "feature": "marks_recent_vs_previous",
+      "importance": 0.106
+    },
+    {
+      "feature": "marks_current_avg",
+      "importance": 0.1058
+    },
+    {
+      "feature": "backlog_count_active",
+      "importance": 0.0654
+    },
+    {
+      "feature": "attendance_decline_pp",
+      "importance": 0.0649
+    },
+    {
+      "feature": "marks_mean",
+      "importance": 0.0644
+    },
+    {
+      "feature": "attendance_slope",
+      "importance": 0.0627
+    },
+    {
+      "feature": "attendance_current",
+      "importance": 0.044
+    },
+    {
+      "feature": "attendance_mean",
+      "importance": 0.0404
+    },
+    {
+      "feature": "attendance_acceleration",
+      "importance": 0.0298
+    },
+    {
+      "feature": "attendance_recent_vs_historical",
+      "importance": 0.0287
+    },
+    {
+      "feature": "backlog_count_total",
+      "importance": 0.0178
+    },
+    {
+      "feature": "marks_failed_subject_count",
+      "importance": 0.0158
+    },
+    {
+      "feature": "attendance_consecutive_decline",
+      "importance": 0.0136
+    },
+    {
+      "feature": "max_attempt_number",
+      "importance": 0.0069
+    },
+    {
+      "feature": "fee_percentage_paid",
+      "importance": 0.0063
+    },
+    {
+      "feature": "marks_consecutive_failures",
+      "importance": 0.0055
+    },
+    {
+      "feature": "fee_terms_overdue",
+      "importance": 0.0047
+    },
+    {
+      "feature": "fee_pending_count",
+      "importance": 0.0045
+    },
+    {
+      "feature": "backlog_new_this_semester",
+      "importance": 0.0027
+    },
+    {
+      "feature": "marks_history_count",
+      "importance": 0.0
+    },
+    {
+      "feature": "attendance_history_count",
+      "importance": 0.0
+    },
+    {
+      "feature": "backlog_trend_numeric",
+      "importance": 0.0
+    },
+    {
+      "feature": "has_sufficient_marks_history",
+      "importance": 0.0
+    },
+    {
+      "feature": "has_sufficient_attendance_history",
+      "importance": 0.0
+    }
+  ],
+  "financial_context_stats": {
+    "count": 38,
+    "mean_probability": 0.0347,
+    "min_probability": 0.0011,
+    "max_probability": 0.1907
+  },
+  "trajectory_diagnostic": {
+    "ACADEMIC_DISTRESS_ONLY": {
+      "count": 44,
+      "mean_probability": 0.6055
+    },
+    "FINANCIAL_CONTEXT_ONLY": {
+      "count": 38,
+      "mean_probability": 0.0347
+    },
+    "GRADUALLY_DETERIORATING": {
+      "count": 106,
+      "mean_probability": 0.5805
+    },
+    "IMPROVING": {
+      "count": 73,
+      "mean_probability": 0.0888
+    },
+    "RAPIDLY_DETERIORATING": {
+      "count": 63,
+      "mean_probability": 0.9139
+    },
+    "STABLE": {
+      "count": 176,
+      "mean_probability": 0.0558
+    }
+  }
+}
