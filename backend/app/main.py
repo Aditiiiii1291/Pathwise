@@ -10,11 +10,11 @@ load_dotenv()
 try:
     from app.core.database import init_db
     import app.models
-    from app.api.endpoints.uploads import router as uploads_router
+    from app.api.api import api_router
 except ImportError:
     from backend.app.core.database import init_db
     import backend.app.models
-    from backend.app.api.endpoints.uploads import router as uploads_router
+    from backend.app.api.api import api_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -43,7 +43,7 @@ app.add_middleware(
 )
 
 # Include API routers
-app.include_router(uploads_router)
+app.include_router(api_router)
 
 @app.get("/")
 def read_root():

@@ -332,3 +332,23 @@ def test_upload_api_endpoint(client, db_session):
     assert data["valid_rows"] == 1
     assert data["inserted_rows"] == 1
     assert db_session.query(Student).filter_by(id=301).count() == 1
+
+def test_upload_empty_file_rejected(client):
+    """Verify empty file upload returns HTTP 400."""
+    response = client.post(
+        "/api/uploads/students",
+        files={"file": ("empty.csv", io.BytesIO(b""), "text/csv")},
+    )
+    assert response.status_code == 400
+    assert "empty" in response.json()["detail"].lower()
+
+def test_upload_oversized_file_rejected(client):
+    """Verify oversized file (> 10MB) returns HTTP 413."""
+    # 10.5 MB fake content
+    oversized_data = b"a" * (10 * 1024 * 1024 + 512 * 1024)
+    response = client.post(
+        "/api/uploads/students",
+        files={"file": ("large.csv", io.BytesIO(oversized_data), "text/csv")},
+    )
+    assert response.status_code == 413
+    assert "exceeds" in response.json()["detail"].lower()

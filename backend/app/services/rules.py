@@ -361,12 +361,13 @@ class RuleEngine:
         if not config_record:
             config_record = db.query(RuleConfig).filter(RuleConfig.department.is_(None)).first()
 
-        if not config_record or not config_record.weights:
+        if not config_record or not getattr(config_record, "config_json", None):
             return RuleEngineConfig(department=department)
 
         try:
-            weights = RuleWeights(**config_record.weights)
-            thresholds = RuleThresholds(**(config_record.thresholds or {}))
+            cfg = config_record.config_json if isinstance(config_record.config_json, dict) else {}
+            weights = RuleWeights(**cfg.get("weights", {}))
+            thresholds = RuleThresholds(**cfg.get("thresholds", {}))
             return RuleEngineConfig(weights=weights, thresholds=thresholds, department=department)
         except Exception:
             return RuleEngineConfig(department=department)

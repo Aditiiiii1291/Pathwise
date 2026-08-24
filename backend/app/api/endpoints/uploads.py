@@ -10,9 +10,11 @@ except ImportError:
     from backend.app.schemas.upload import UploadSummary
     from backend.app.services.ingestion import IngestionService
 
-router = APIRouter(prefix="/api/uploads", tags=["uploads"])
+router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 ALLOWED_DATA_TYPES = {"students", "attendance", "marks", "fees", "attempts"}
+MAX_UPLOAD_SIZE_MB = 10
+MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
 @router.post("/{data_type}", response_model=UploadSummary, status_code=status.HTTP_200_OK)
 async def upload_dataset(
@@ -23,6 +25,7 @@ async def upload_dataset(
     """
     Ingests and validates institutional datasets (CSV/XLSX).
     Supported data types: students, attendance, marks, fees, attempts.
+    Max upload size: 10MB.
     """
     if data_type not in ALLOWED_DATA_TYPES:
         raise HTTPException(
@@ -35,6 +38,12 @@ async def upload_dataset(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Uploaded file is empty.",
+        )
+
+    if len(content) > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File exceeds maximum allowed upload size of {MAX_UPLOAD_SIZE_MB}MB.",
         )
 
     service = IngestionService(db)
