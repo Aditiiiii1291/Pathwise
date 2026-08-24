@@ -256,12 +256,22 @@ class FeatureEngineeringService:
 
         max_attempt = max([a.attempt_number for a in attempt_items]) if total_count > 0 else 1
 
-        # Backlog trajectory: -1 decreasing (more cleared), 0 neutral, +1 increasing (more active)
-        cleared_count = sum(1 for a in attempt_items if a.status.upper() == "CLEARED")
-        if active_count > cleared_count:
-            trend_numeric = 1
-        elif cleared_count > active_count:
-            trend_numeric = -1
+        # Semester-by-semester active backlog temporal trend
+        all_semesters = sorted(list({a.semester for a in attempt_items}))
+        if len(all_semesters) >= 2:
+            semester_active_counts = [
+                sum(1 for a in active_items if a.semester == sem)
+                for sem in all_semesters
+            ]
+            x_sem = np.arange(len(semester_active_counts))
+            slope = float(np.polyfit(x_sem, semester_active_counts, 1)[0])
+            tolerance = 1e-4
+            if slope > tolerance:
+                trend_numeric = 1
+            elif slope < -tolerance:
+                trend_numeric = -1
+            else:
+                trend_numeric = 0
         else:
             trend_numeric = 0
 

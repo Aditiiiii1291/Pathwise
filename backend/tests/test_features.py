@@ -207,7 +207,7 @@ def test_empty_marks_edge_case():
     assert not feats.has_sufficient_marks_history
 
 def test_backlog_features():
-    """Verify active backlog counts, semester backlogs, and trend direction."""
+    """Verify active backlog counts, semester backlogs, and max attempt number."""
     attempts = [
         {"subject": "Math", "semester": 3, "attempt_number": 2, "status": "ACTIVE"},
         {"subject": "Physics", "semester": 4, "attempt_number": 1, "status": "ACTIVE"},
@@ -220,7 +220,58 @@ def test_backlog_features():
     assert feats.backlog_count_total == 3
     assert feats.backlog_new_this_semester == 1
     assert feats.max_attempt_number == 2
+
+def test_backlog_temporal_trend_increasing():
+    """Verify [1, 2, 3] active backlogs across semesters produces trend +1."""
+    attempts = [
+        {"subject": "Subj1", "semester": 2, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj2", "semester": 3, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj3", "semester": 3, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj4", "semester": 4, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj5", "semester": 4, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj6", "semester": 4, "attempt_number": 1, "status": "ACTIVE"},
+    ]
+    profile = create_profile(attempts=attempts)
+    feats = FeatureEngineeringService.extract_features(profile)
     assert feats.backlog_trend_numeric == 1
+
+def test_backlog_temporal_trend_decreasing():
+    """Verify [3, 2, 1] active backlogs across semesters produces trend -1."""
+    attempts = [
+        {"subject": "Subj1", "semester": 2, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj2", "semester": 2, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj3", "semester": 2, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj4", "semester": 3, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj5", "semester": 3, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj6", "semester": 4, "attempt_number": 1, "status": "ACTIVE"},
+    ]
+    profile = create_profile(attempts=attempts)
+    feats = FeatureEngineeringService.extract_features(profile)
+    assert feats.backlog_trend_numeric == -1
+
+def test_backlog_temporal_trend_stable():
+    """Verify [2, 2, 2] active backlogs across semesters produces trend 0."""
+    attempts = [
+        {"subject": "Subj1", "semester": 2, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj2", "semester": 2, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj3", "semester": 3, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj4", "semester": 3, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj5", "semester": 4, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj6", "semester": 4, "attempt_number": 1, "status": "ACTIVE"},
+    ]
+    profile = create_profile(attempts=attempts)
+    feats = FeatureEngineeringService.extract_features(profile)
+    assert feats.backlog_trend_numeric == 0
+
+def test_backlog_temporal_trend_single_semester():
+    """Verify single semester backlog produces trend 0 (insufficient history)."""
+    attempts = [
+        {"subject": "Subj1", "semester": 2, "attempt_number": 1, "status": "ACTIVE"},
+        {"subject": "Subj2", "semester": 2, "attempt_number": 1, "status": "ACTIVE"},
+    ]
+    profile = create_profile(attempts=attempts)
+    feats = FeatureEngineeringService.extract_features(profile)
+    assert feats.backlog_trend_numeric == 0
 
 def test_fee_contextual_features():
     """Verify fee percentage paid and overdue calculations relative to fixed reference date."""
