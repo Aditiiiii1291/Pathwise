@@ -1,5 +1,4 @@
 import os
-import sqlite3
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from dotenv import load_dotenv
@@ -7,18 +6,54 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./pathwise.db")
 
-# Configure connection args for SQLite
-connect_args = {}
-if DATABASE_URL.startswith("sqlite"):
-    connect_args["check_same_thread"] = False
+def normalize_database_url(url: str) -> str:
+    """
+    Normalizes database URL string.
+    Render passes PostgreSQL URLs starting with 'postgres://', which SQLAlchemy 1.4+
+    requires to be 'postgresql://' or 'postgresql+psycopg2://'.
+    """
+    if not url:
+        return "sqlite:///./pathwise.db"
+    url = url.strip()
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql://", 1)
+    return url
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+
+def get_engine_kwargs(url: str) -> dict:
+    """Returns dialect-specific engine configuration options."""
+    kwargs = {}
+    if url.startswith("sqlite"):
+        kwargs["connect_args"] = {"check_same_thread": False}
+    elif url.startswith("postgresql"):
+        kwargs["pool_pre_ping"] = True
+        # Optional pooling tuning from environment variables if present
+        pool_size = os.getenv("DB_POOL_SIZE")
+        if pool_size:
+            try:
+                kwargs["pool_size"] = int(pool_size)
+            except ValueError:
+                pass
+        max_overflow = os.getenv("DB_MAX_OVERFLOW")
+        if max_overflow:
+            try:
+                kwargs["max_overflow"] = int(max_overflow)
+            except ValueError:
+                pass
+    else:
+        kwargs["pool_pre_ping"] = True
+    return kwargs
+
+
+DATABASE_URL = normalize_database_url(os.getenv("DATABASE_URL", "sqlite:///./pathwise.db"))
+
+engine = create_engine(DATABASE_URL, **get_engine_kwargs(DATABASE_URL))
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
 
 def get_db():
     """Dependency for obtaining a database session."""
@@ -27,6 +62,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 def _migrate_sqlite_columns_safely(engine_instance):
     """Safely adds newly added columns to existing SQLite tables if they do not already exist."""
@@ -68,6 +104,7 @@ def _migrate_sqlite_columns_safely(engine_instance):
                         conn.exec_driver_sql(f"ALTER TABLE interventions ADD COLUMN {col_name} {col_type}")
     except Exception:
         pass  # Non-SQLite or in-memory DB will have fresh tables created via create_all
+
 
 def init_db(engine_instance=None):
     """Initializes all database tables registered with Base and migrates SQLite columns safely."""

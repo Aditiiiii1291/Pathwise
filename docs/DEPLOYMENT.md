@@ -113,24 +113,48 @@ The backend container mounts a named Docker volume (`pathwise_db_data`) mapped t
 
 ---
 
-## 7. Render Cloud Deployment Guidelines
+## 7. Render Cloud Deployment Guidelines (with Persistent PostgreSQL)
 
-### Backend (Web Service / Docker)
-1. **Environment:** Docker or Python 3.12
-2. **Build Command:** `pip install -r requirements.txt` (if native Python)
-3. **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. **Environment Variables:**
-   - `JWT_SECRET_KEY`: Set to a strong random 64-byte string.
-   - `DATABASE_URL`: `sqlite:///./data/pathwise.db` (with Render Persistent Disk mounted at `/opt/render/project/src/data`) or ephemeral SQLite with `seed_demo_data.py`.
-   - `FRONTEND_ORIGINS`: Set to your deployed Render frontend URL (e.g. `https://pathwise.onrender.com`).
-5. **Health Check Path:** `/health`
+### 1. Provision Managed PostgreSQL on Render
+1. In Render Dashboard, click **New +** $\rightarrow$ **PostgreSQL**.
+2. **Name:** `pathwise-db` (or desired name).
+3. **Region:** Select the same region as your backend Web Service (e.g. *Oregon (US West)*).
+4. **Plan:** Free or Starter.
+5. Click **Create Database**.
+6. Once provisioned, copy the **Internal Database URL** (if backend is on Render) or **External Database URL**.
+   *(Render URLs starting with `postgres://` or `postgresql://` are automatically handled and normalized by Pathwise).*
 
-### Frontend (Static Site / Web Service)
-1. **Build Command:** `npm ci && npm run build`
-2. **Publish Directory:** `dist`
-3. **Environment Variables:**
-   - `VITE_API_BASE_URL`: `https://pathwise-api.onrender.com` (your deployed backend URL)
-4. **Single-Page Application (SPA) Rewrite:** Configure rewrite rule: `/*` $\rightarrow$ `/index.html` with status `200`.
+### 2. Configure Backend Web Service
+1. In Render Dashboard, open your backend service (`pathwise-92ht`).
+2. Go to **Environment** tab.
+3. Configure the following environment variables:
+   - `DATABASE_URL`: `<paste-your-render-postgresql-url>`
+   - `JWT_SECRET_KEY`: `<generate-a-secure-64-byte-token>`
+   - `FRONTEND_ORIGINS`: `https://pathwise-1-sibf.onrender.com` (your deployed frontend URL)
+4. Click **Save Changes** $\rightarrow$ Render will automatically redeploy the backend.
+5. Verify health: `GET https://pathwise-92ht.onrender.com/health` returns `{"status": "healthy"}`.
+   *(Tables are automatically initialized upon startup via `init_db()`).*
+
+### 3. Initialize Initial Administrator & Academic Dataset
+Open the **Shell** tab in your Render backend Web Service (or run via SSH):
+1. **Create Initial Administrator Account:**
+   ```bash
+   python -m app.scripts.create_admin
+   ```
+   Follow the interactive prompts to set your secure username and password.
+2. **Seed Synthetic Academic Cohort (Optional):**
+   ```bash
+   python -m app.scripts.seed_demo_data
+   ```
+   Populates 500 synthetic student records, attendance, marks, fees, and baseline risk snapshots into PostgreSQL.
+
+### 4. Configure Frontend Static Site
+1. In Render Dashboard, open your frontend service (`pathwise-1-sibf`).
+2. Go to **Environment** tab:
+   - `VITE_API_BASE_URL`: `https://pathwise-92ht.onrender.com`
+3. Click **Save Changes** and trigger **Manual Deploy** $\rightarrow$ **Clear build cache & deploy**.
+4. Configure SPA Rewrite Rule: In **Redirects/Rewrites**, add `/*` $\rightarrow$ `/index.html` with action `Rewrite`.
+5. Open `https://pathwise-1-sibf.onrender.com`, log in with your administrator account, and verify all data and sessions persist permanently across backend redeployments.
 
 ---
 
