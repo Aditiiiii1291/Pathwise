@@ -4,9 +4,10 @@ import Layout from './components/layout/Layout';
 import OverviewPage from './pages/OverviewPage';
 import StudentsPage from './pages/StudentsPage';
 import StudentProfilePage from './pages/StudentProfilePage';
+import InterventionsPage from './pages/InterventionsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import RulesPage from './pages/RulesPage';
 import UploadPage from './pages/UploadPage';
-import NotificationsPage from './pages/NotificationsPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ConnectionStatusPage from './pages/ConnectionStatusPage';
@@ -66,6 +67,7 @@ export default function App() {
           <Route index element={<OverviewPage />} />
           <Route path="students" element={<StudentsPage />} />
           <Route path="students/:id" element={<StudentProfilePage />} />
+          <Route path="interventions" element={<InterventionsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="rules" element={<RulesPage />} />
           <Route path="upload" element={<UploadPage />} />

@@ -13,6 +13,10 @@ import {
   Sparkles,
   RefreshCw,
   Info,
+  HeartHandshake,
+  Plus,
+  Edit2,
+  CheckCircle2,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -26,11 +30,34 @@ import {
   CartesianGrid,
   ReferenceLine,
 } from 'recharts';
-import { getStudentProfile, getStudentAssessment, computeAndPersistAssessment } from '../utils/api';
+import {
+  getStudentProfile,
+  getStudentAssessment,
+  computeAndPersistAssessment,
+  getInterventions,
+} from '../utils/api';
 import RiskBadge from '../components/common/RiskBadge';
 import TrendBadge from '../components/common/TrendBadge';
 import { SkeletonCard } from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
+import InterventionModal from '../components/interventions/InterventionModal';
+
+const STATUS_BADGES = {
+  PLANNED: 'bg-blue-50 text-blue-700 border-blue-200',
+  IN_PROGRESS: 'bg-amber-50 text-amber-700 border-amber-200',
+  COMPLETED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  CANCELLED: 'bg-slate-100 text-slate-500 border-slate-200',
+};
+
+const CATEGORY_MAP = {
+  ATTENDANCE: 'ATTENDANCE_SUPPORT',
+  ACADEMIC: 'ACADEMIC_SUPPORT',
+  MARKS: 'ACADEMIC_SUPPORT',
+  FEES: 'FINANCIAL_GUIDANCE',
+  FINANCIAL: 'FINANCIAL_GUIDANCE',
+  BACKLOG: 'ACADEMIC_SUPPORT',
+  GENERAL: 'COUNSELLING',
+};
 
 export default function StudentProfilePage() {
   const { id } = useParams();
@@ -40,19 +67,27 @@ export default function StudentProfilePage() {
   const [error, setError] = useState(null);
   const [profileData, setProfileData] = useState(null);
   const [assessmentData, setAssessmentData] = useState(null);
+  const [interventions, setInterventions] = useState([]);
   const [isPersisting, setIsPersisting] = useState(false);
   const [persistMessage, setPersistMessage] = useState(null);
+
+  // Intervention modal state
+  const [isInterventionModalOpen, setIsInterventionModalOpen] = useState(false);
+  const [interventionInitialData, setInterventionInitialData] = useState(null);
+  const [actionMessage, setActionMessage] = useState(null);
 
   const fetchProfileAndAssessment = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [profileRes, assessmentRes] = await Promise.all([
+      const [profileRes, assessmentRes, interventionsRes] = await Promise.all([
         getStudentProfile(studentId),
         getStudentAssessment(studentId),
+        getInterventions({ studentId, pageSize: 50 }),
       ]);
       setProfileData(profileRes.profile);
       setAssessmentData(assessmentRes);
+      setInterventions(interventionsRes.items || []);
     } catch (err) {
       console.error('Failed to load profile/assessment:', err);
       setError(err.message || 'Unable to retrieve student profile.');
@@ -78,6 +113,40 @@ export default function StudentProfilePage() {
     } finally {
       setIsPersisting(false);
     }
+  };
+
+  const handleOpenNewIntervention = () => {
+    setInterventionInitialData(null);
+    setIsInterventionModalOpen(true);
+  };
+
+  const handleConvertRecommendationToIntervention = (rec) => {
+    const matchedType = CATEGORY_MAP[rec.category?.toUpperCase()] || 'COUNSELLING';
+    setInterventionInitialData({
+      student_id: studentId,
+      student_name: profileData?.student?.name,
+      student_roll: profileData?.student?.roll_number,
+      student_dept: profileData?.student?.department,
+      title: rec.title || 'Support Action',
+      intervention_type: matchedType,
+      notes: rec.description || '',
+      status: 'PLANNED',
+    });
+    setIsInterventionModalOpen(true);
+  };
+
+  const handleOpenEditIntervention = (item) => {
+    setInterventionInitialData(item);
+    setIsInterventionModalOpen(true);
+  };
+
+  const handleInterventionSuccess = (saved) => {
+    setActionMessage(`Intervention "${saved.title}" saved successfully.`);
+    setTimeout(() => setActionMessage(null), 4000);
+    // Reload student interventions
+    getInterventions({ studentId, pageSize: 50 }).then((res) => {
+      setInterventions(res.items || []);
+    });
   };
 
   if (error) {
@@ -158,95 +227,123 @@ export default function StudentProfilePage() {
           <span className="font-mono text-slate-400">({student?.roll_number})</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {persistMessage && (
-            <span
-              className={`text-xs px-2.5 py-1 rounded-lg ${
-                persistMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-              }`}
-            >
-              {persistMessage.text}
-            </span>
-          )}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleOpenNewIntervention}
+            className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <HeartHandshake className="w-3.5 h-3.5" />
+            <span>Record Support Action</span>
+          </button>
+
           <button
             onClick={handleSaveAssessmentSnapshot}
             disabled={isPersisting}
-            className="px-3.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-xl text-xs font-semibold shadow-subtle transition flex items-center gap-1.5 disabled:opacity-50"
-            title="Saves current evaluation as an immutable historical RiskSnapshot"
+            className="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-700 hover:text-slate-950 hover:bg-slate-50 rounded-xl text-xs font-semibold shadow-subtle transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+            title="Saves persistent snapshot of this assessment for historical tracking"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isPersisting ? 'animate-spin' : ''}`} />
-            <span>Persist Assessment Snapshot</span>
+            <span>{isPersisting ? 'Persisting...' : 'Persist Snapshot'}</span>
           </button>
         </div>
       </div>
 
-      {/* Student Identity Dossier Header */}
-      <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-100 to-blue-50 border border-blue-200/60 text-brand-600 flex items-center justify-center font-bold text-xl shadow-xs">
-            {student?.name?.charAt(0) || 'S'}
-          </div>
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-lg font-bold text-slate-800 tracking-tight">
-                {student?.name}
-              </h2>
-              <span className="text-xs font-mono font-medium px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md">
-                {student?.roll_number}
-              </span>
+      {persistMessage && (
+        <div
+          className={`p-3 rounded-xl text-xs font-medium border flex items-center gap-2 animate-in fade-in ${
+            persistMessage.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          {persistMessage.type === 'success' ? (
+            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          )}
+          <span>{persistMessage.text}</span>
+        </div>
+      )}
+
+      {actionMessage && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-medium flex items-center gap-2 animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{actionMessage}</span>
+        </div>
+      )}
+
+      {/* Hero Dossier Card */}
+      <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-card">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 text-brand-600 flex items-center justify-center text-xl font-bold">
+              {student?.name?.charAt(0) || 'S'}
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-1">
-              <span><strong>Department:</strong> {student?.department}</span>
-              <span>&bull;</span>
-              <span><strong>Current Semester:</strong> {student?.semester}</span>
-              <span>&bull;</span>
-              <span><strong>Enrolled:</strong> {student?.enrollment_year}</span>
-              {mentor && (
-                <>
-                  <span>&bull;</span>
-                  <span><strong>Mentor:</strong> {mentor.name}</span>
-                </>
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-bold tracking-tight text-slate-800">
+                  {student?.name}
+                </h1>
+                <RiskBadge tier={assessment?.risk_tier || 'LOW'} />
+                <TrendBadge trend={assessment?.trend || 'STABLE'} />
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                <span className="font-mono">{student?.roll_number}</span>
+                <span>&bull;</span>
+                <span>{student?.department} Department</span>
+                <span>&bull;</span>
+                <span>Semester {student?.semester}</span>
+                {student?.enrollment_year && (
+                  <>
+                    <span>&bull;</span>
+                    <span>Enrolled {student?.enrollment_year}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Assigned Mentor Card */}
+          <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-3 max-w-xs">
+            <div className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-600 flex items-center justify-center shrink-0">
+              <User className="w-4 h-4" />
+            </div>
+            <div className="text-xs min-w-0">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                Assigned Mentor
+              </span>
+              <span className="font-semibold text-slate-800 block truncate">
+                {mentor?.name || 'Unassigned'}
+              </span>
+              {mentor?.email && (
+                <span className="text-slate-400 block truncate text-[11px]">
+                  {mentor.email}
+                </span>
               )}
             </div>
           </div>
         </div>
-
-        {/* Assessment Status Badges */}
-        <div className="flex items-center gap-3">
-          <div className="text-right">
-            <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider block">
-              Risk Tier
-            </span>
-            <RiskBadge tier={assessment?.risk_tier} size="lg" />
-          </div>
-          <div className="text-right">
-            <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider block">
-              Observed Trend
-            </span>
-            <TrendBadge trend={assessment?.trend} size="lg" />
-          </div>
-        </div>
       </div>
 
-      {/* Primary Vital Metric Cards (4 Grid) */}
+      {/* Multi-Dimensional Analytics Snapshot Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Final Retention Risk Score */}
-        <div className="bg-[#F8FAFF] border border-blue-100/80 rounded-2xl p-4 shadow-subtle flex flex-col justify-between">
-          <span className="text-xs font-semibold text-slate-500">Final Risk Score</span>
-          <div className="my-1 flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-slate-800">
+        {/* Card 1: Fused Score */}
+        <div className="bg-[#F6F8FE] border border-blue-100/80 rounded-2xl p-4 shadow-subtle flex flex-col justify-between">
+          <span className="text-xs font-semibold text-brand-700">Fused Risk Score</span>
+          <div className="my-1">
+            <span className="text-3xl font-bold text-slate-800">
               {assessment?.final_score !== undefined ? assessment.final_score.toFixed(1) : '—'}
             </span>
-            <span className="text-xs text-slate-400 font-medium">/ 100</span>
+            <span className="text-xs text-slate-400 font-medium ml-1">/ 100</span>
           </div>
           <span className="text-[11px] text-slate-500">
-            Fused rule score ({assessment?.rule_score?.toFixed(1) || 0}) + ML
+            Rule Weight (60%) + ML (40%)
           </span>
         </div>
 
-        {/* Card 2: Predicted Dropout Probability */}
+        {/* Card 2: ML Probability */}
         <div className="bg-[#FAF5FF] border border-purple-100/80 rounded-2xl p-4 shadow-subtle flex flex-col justify-between">
-          <span className="text-xs font-semibold text-slate-500">Predicted Dropout Probability</span>
+          <span className="text-xs font-semibold text-purple-800">ML Retention Probability</span>
           <div className="my-1">
             <span className="text-2xl font-bold text-purple-900">
               {predProb}
@@ -415,15 +512,20 @@ export default function StudentProfilePage() {
           )}
         </div>
 
-        {/* Recommended Support Actions */}
+        {/* Recommended Support Actions (Human-in-the-Loop) */}
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-card space-y-4">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-sm font-bold text-slate-800">
-              Recommended Support Actions
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Actionable guidance to facilitate constructive mentor follow-ups
-            </p>
+          <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800">
+                Recommended Support Actions
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Actionable guidance to facilitate constructive mentor follow-ups
+              </p>
+            </div>
+            <span className="text-[10px] font-semibold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+              Decision Support
+            </span>
           </div>
 
           {explanation?.recommendations && explanation.recommendations.length > 0 ? (
@@ -431,7 +533,7 @@ export default function StudentProfilePage() {
               {explanation.recommendations.map((rec, idx) => (
                 <div
                   key={idx}
-                  className="p-3.5 bg-emerald-50/40 border border-emerald-100/70 rounded-xl space-y-1.5"
+                  className="p-3.5 bg-emerald-50/40 border border-emerald-100/70 rounded-xl space-y-2"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -449,6 +551,15 @@ export default function StudentProfilePage() {
                   <p className="text-xs text-slate-600 leading-relaxed">
                     {rec.description}
                   </p>
+                  <div className="pt-1 flex justify-end">
+                    <button
+                      onClick={() => handleConvertRecommendationToIntervention(rec)}
+                      className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-semibold transition inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Create Intervention</span>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -458,6 +569,105 @@ export default function StudentProfilePage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Intervention History Section (Phase 14) */}
+      <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-card space-y-4">
+        <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <HeartHandshake className="w-4 h-4 text-brand-600" />
+              <span>Intervention & Support History</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Chronological audit of mentor counselling actions, support plans, and scheduled follow-ups
+            </p>
+          </div>
+
+          <button
+            onClick={handleOpenNewIntervention}
+            className="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200/70 rounded-xl text-xs font-semibold transition self-start sm:self-auto flex items-center gap-1 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Record Action</span>
+          </button>
+        </div>
+
+        {interventions.length === 0 ? (
+          <div className="p-8 text-center bg-slate-50/50 border border-slate-100 rounded-xl space-y-2">
+            <HeartHandshake className="w-8 h-8 text-slate-300 mx-auto" />
+            <p className="text-xs font-semibold text-slate-700">No interventions recorded yet</p>
+            <p className="text-[11px] text-slate-400 max-w-md mx-auto">
+              Use "Record Support Action" or click "Create Intervention" on an AI recommendation above to log a counselling session or recovery plan.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {interventions.map((item) => {
+              const statusBadge = STATUS_BADGES[item.status] || STATUS_BADGES.PLANNED;
+              return (
+                <div
+                  key={item.id}
+                  className="p-4 bg-slate-50/60 border border-slate-100 hover:border-slate-200 rounded-xl space-y-2.5 transition"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${statusBadge}`}
+                      >
+                        {item.status.replace('_', ' ')}
+                      </span>
+                      <h4 className="text-xs font-bold text-slate-800">
+                        {item.title}
+                      </h4>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        ({item.intervention_type})
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {item.follow_up_date && (
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                          <Calendar className="w-3 h-3 text-slate-400" />
+                          <span>Follow-up: <strong>{item.follow_up_date}</strong></span>
+                          {item.is_follow_up_due && (
+                            <span className="px-1.5 py-0.2 bg-rose-50 border border-rose-200 text-rose-700 text-[9px] font-bold rounded">
+                              DUE
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => handleOpenEditIntervention(item)}
+                        className="px-2.5 py-1 text-[11px] font-medium text-brand-700 bg-white hover:bg-brand-50 border border-slate-200 rounded-lg transition inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        <span>Update</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {item.notes && (
+                    <p className="text-xs text-slate-600 bg-white border border-slate-100 p-2.5 rounded-lg leading-relaxed">
+                      {item.notes}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-slate-400 pt-0.5">
+                    <span>Logged on: {new Date(item.created_at).toLocaleDateString()}</span>
+                    {item.completed_at && (
+                      <span className="text-emerald-600 font-medium">
+                        &bull; Completed: {new Date(item.completed_at).toLocaleDateString()}
+                      </span>
+                    )}
+                    {item.mentor_name && <span>&bull; Recorded by: {item.mentor_name}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Global Model Context (Explicitly Separated) */}
@@ -506,6 +716,15 @@ export default function StudentProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Intervention Modal */}
+      <InterventionModal
+        isOpen={isInterventionModalOpen}
+        onClose={() => setIsInterventionModalOpen(false)}
+        onSuccess={handleInterventionSuccess}
+        student={profileData?.student}
+        initialData={interventionInitialData}
+      />
     </div>
   );
 }

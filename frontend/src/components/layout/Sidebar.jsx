@@ -3,9 +3,10 @@ import { NavLink } from 'react-router-dom';
 import {
   Home,
   Users,
+  HeartHandshake,
+  Bell,
   UploadCloud,
   Sliders,
-  Bell,
   FileText,
   Settings,
   ChevronLeft,
@@ -18,6 +19,7 @@ export default function Sidebar() {
   const navItems = [
     { to: '/', label: 'Overview', icon: Home },
     { to: '/students', label: 'Students', icon: Users },
+    { to: '/interventions', label: 'Interventions', icon: HeartHandshake },
     { to: '/notifications', label: 'Notifications', icon: Bell },
     { to: '/upload', label: 'Upload Data', icon: UploadCloud },
     { to: '/rules', label: 'Rule Engine', icon: Sliders },

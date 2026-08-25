@@ -21,6 +21,10 @@ async function fetchJson(endpoint, options = {}) {
       throw error;
     }
 
+    if (response.status === 204) {
+      return null;
+    }
+
     return await response.json();
   } catch (err) {
     if (err.name === 'TypeError' && err.message.includes('fetch')) {
@@ -197,4 +201,83 @@ export async function markAllNotificationsAsRead() {
   return await fetchJson('/api/notifications/read-all', {
     method: 'PATCH',
   });
+}
+
+/**
+ * =========================================================================
+ * PHASE 14 — INTERVENTION & COUNSELLING ENDPOINTS
+ * =========================================================================
+ */
+
+/**
+ * Create a new intervention / counselling record for a student.
+ */
+export async function createIntervention(payload) {
+  return await fetchJson('/api/interventions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Retrieve paginated list of interventions with filters.
+ */
+export async function getInterventions({
+  page = 1,
+  pageSize = 20,
+  studentId = null,
+  mentorId = null,
+  status = '',
+  interventionType = '',
+  followUpsDue = false,
+} = {}) {
+  const params = new URLSearchParams();
+  params.append('page', page);
+  params.append('page_size', pageSize);
+  if (studentId) params.append('student_id', studentId);
+  if (mentorId) params.append('mentor_id', mentorId);
+  if (status) params.append('status', status);
+  if (interventionType) params.append('intervention_type', interventionType);
+  if (followUpsDue) params.append('follow_ups_due', 'true');
+
+  return await fetchJson(`/api/interventions?${params.toString()}`);
+}
+
+/**
+ * Retrieve single intervention by ID.
+ */
+export async function getInterventionById(interventionId) {
+  return await fetchJson(`/api/interventions/${interventionId}`);
+}
+
+/**
+ * Update an existing intervention (status, title, notes, follow-up date).
+ */
+export async function updateIntervention(interventionId, payload) {
+  return await fetchJson(`/api/interventions/${interventionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Administratively delete an intervention record.
+ */
+export async function deleteIntervention(interventionId) {
+  return await fetchJson(`/api/interventions/${interventionId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Get aggregate summary counts of interventions (active, planned, completed, due).
+ */
+export async function getInterventionsSummary() {
+  return await fetchJson('/api/interventions/summary');
 }
