@@ -11,7 +11,13 @@ try:
         PaginatedInterventionResponse,
         InterventionSummaryResponse,
     )
+    from app.schemas.intervention_effectiveness import (
+        InterventionEffectivenessDetail,
+        AggregateEffectivenessSummary,
+        PaginatedFollowUpResponse,
+    )
     from app.services.interventions import InterventionService
+    from app.services.intervention_effectiveness import InterventionEffectivenessService
 except ImportError:
     from backend.app.core.database import get_db
     from backend.app.schemas.intervention import (
@@ -21,7 +27,13 @@ except ImportError:
         PaginatedInterventionResponse,
         InterventionSummaryResponse,
     )
+    from backend.app.schemas.intervention_effectiveness import (
+        InterventionEffectivenessDetail,
+        AggregateEffectivenessSummary,
+        PaginatedFollowUpResponse,
+    )
     from backend.app.services.interventions import InterventionService
+    from backend.app.services.intervention_effectiveness import InterventionEffectivenessService
 
 router = APIRouter(prefix="/interventions", tags=["interventions"])
 
@@ -43,9 +55,66 @@ def get_interventions_summary(
     db: Session = Depends(get_db),
 ):
     """
-    Returns aggregate summary metrics across all intervention records.
+    Returns operational summary metrics across all intervention records.
     """
     return InterventionService.get_summary(db=db)
+
+
+@router.get("/effectiveness/summary", response_model=AggregateEffectivenessSummary, status_code=status.HTTP_200_OK)
+def get_effectiveness_summary(
+    db: Session = Depends(get_db),
+):
+    """
+    Returns cohort-wide aggregate trajectory outcomes (improved, stable, worsened, awaiting).
+    """
+    return InterventionEffectivenessService.get_aggregate_summary(db=db)
+
+
+@router.get("/follow-ups", response_model=PaginatedFollowUpResponse, status_code=status.HTTP_200_OK)
+def list_follow_ups(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    state: Optional[str] = Query(None, description="Filter by state (OVERDUE, DUE_TODAY, UPCOMING, CLOSED, NO_FOLLOW_UP)"),
+    student_id: Optional[int] = Query(None, description="Filter by student ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieves a paginated list of scheduled follow-ups with derived urgency state.
+    """
+    items, total, pages, overdue_cnt, due_today_cnt, upcoming_cnt = InterventionEffectivenessService.get_follow_ups(
+        db=db,
+        state=state,
+        student_id=student_id,
+        page=page,
+        page_size=page_size,
+    )
+    return PaginatedFollowUpResponse(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total=total,
+        pages=pages,
+        overdue_count=overdue_cnt,
+        due_today_count=due_today_cnt,
+        upcoming_count=upcoming_cnt,
+    )
+
+
+@router.get("/{intervention_id}/effectiveness", response_model=InterventionEffectivenessDetail, status_code=status.HTTP_200_OK)
+def get_intervention_effectiveness(
+    intervention_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieves observed before-and-after risk trajectory metrics for a specific intervention.
+    """
+    intervention = InterventionService.get_intervention_by_id(db=db, intervention_id=intervention_id)
+    if not intervention:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Intervention with ID {intervention_id} not found."
+        )
+    return InterventionEffectivenessService.evaluate_intervention(db=db, intervention=intervention)
 
 
 @router.get("", response_model=PaginatedInterventionResponse, status_code=status.HTTP_200_OK)

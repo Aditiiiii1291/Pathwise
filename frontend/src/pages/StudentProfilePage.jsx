@@ -17,6 +17,9 @@ import {
   Plus,
   Edit2,
   CheckCircle2,
+  TrendingDown,
+  TrendingUp,
+  Minus,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -41,6 +44,7 @@ import TrendBadge from '../components/common/TrendBadge';
 import { SkeletonCard } from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
 import InterventionModal from '../components/interventions/InterventionModal';
+import EffectivenessModal from '../components/interventions/EffectivenessModal';
 
 const STATUS_BADGES = {
   PLANNED: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -76,6 +80,9 @@ export default function StudentProfilePage() {
   const [interventionInitialData, setInterventionInitialData] = useState(null);
   const [actionMessage, setActionMessage] = useState(null);
 
+  // Effectiveness modal state
+  const [selectedEffectivenessId, setSelectedEffectivenessId] = useState(null);
+
   const fetchProfileAndAssessment = async () => {
     setLoading(true);
     setError(null);
@@ -108,6 +115,9 @@ export default function StudentProfilePage() {
       setAssessmentData(saved);
       setPersistMessage({ type: 'success', text: 'Risk assessment snapshot persisted to history!' });
       setTimeout(() => setPersistMessage(null), 4000);
+      // Reload interventions list to refresh potential post-intervention evaluations
+      const updatedInterv = await getInterventions({ studentId, pageSize: 50 });
+      setInterventions(updatedInterv.items || []);
     } catch (err) {
       setPersistMessage({ type: 'error', text: err.message || 'Failed to persist assessment.' });
     } finally {
@@ -143,7 +153,6 @@ export default function StudentProfilePage() {
   const handleInterventionSuccess = (saved) => {
     setActionMessage(`Intervention "${saved.title}" saved successfully.`);
     setTimeout(() => setActionMessage(null), 4000);
-    // Reload student interventions
     getInterventions({ studentId, pageSize: 50 }).then((res) => {
       setInterventions(res.items || []);
     });
@@ -193,7 +202,6 @@ export default function StudentProfilePage() {
   const assessment = assessmentData?.assessment;
   const explanation = assessmentData?.explanation;
 
-  // Format attendance records for line chart
   const attendanceChartData = attendance.map((att) => ({
     week: `W${att.week_number}`,
     percentage: att.percentage !== null && att.percentage !== undefined ? att.percentage : (att.attended_hours / att.total_hours * 100),
@@ -201,7 +209,6 @@ export default function StudentProfilePage() {
     total: att.total_hours,
   }));
 
-  // Format marks records for performance chart
   const marksChartData = marks.map((m) => ({
     name: `${m.course_code} (${m.exam_type})`,
     score: m.marks_obtained,
@@ -327,7 +334,6 @@ export default function StudentProfilePage() {
 
       {/* Multi-Dimensional Analytics Snapshot Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Fused Score */}
         <div className="bg-[#F6F8FE] border border-blue-100/80 rounded-2xl p-4 shadow-subtle flex flex-col justify-between">
           <span className="text-xs font-semibold text-brand-700">Fused Risk Score</span>
           <div className="my-1">
@@ -341,7 +347,6 @@ export default function StudentProfilePage() {
           </span>
         </div>
 
-        {/* Card 2: ML Probability */}
         <div className="bg-[#FAF5FF] border border-purple-100/80 rounded-2xl p-4 shadow-subtle flex flex-col justify-between">
           <span className="text-xs font-semibold text-purple-800">ML Retention Probability</span>
           <div className="my-1">
@@ -354,7 +359,6 @@ export default function StudentProfilePage() {
           </span>
         </div>
 
-        {/* Card 3: Backlog & Attempt Status */}
         <div className="bg-[#FFFDF5] border border-amber-100/80 rounded-2xl p-4 shadow-subtle flex flex-col justify-between">
           <span className="text-xs font-semibold text-slate-500">Backlogs & Attempts</span>
           <div className="my-1">
@@ -367,7 +371,6 @@ export default function StudentProfilePage() {
           </span>
         </div>
 
-        {/* Card 4: Fee Standing */}
         <div className="bg-[#F3FAF7] border border-emerald-100/80 rounded-2xl p-4 shadow-subtle flex flex-col justify-between">
           <span className="text-xs font-semibold text-slate-500">Fee Payment Standing</span>
           <div className="my-1">
@@ -571,7 +574,7 @@ export default function StudentProfilePage() {
         </div>
       </div>
 
-      {/* Intervention History Section (Phase 14) */}
+      {/* Intervention History Section (Phase 14 & 15) */}
       <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-card space-y-4">
         <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -580,7 +583,7 @@ export default function StudentProfilePage() {
               <span>Intervention & Support History</span>
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Chronological audit of mentor counselling actions, support plans, and scheduled follow-ups
+              Chronological audit of mentor counselling actions, support plans, and observed trajectory comparisons
             </p>
           </div>
 
@@ -611,7 +614,7 @@ export default function StudentProfilePage() {
                   className="p-4 bg-slate-50/60 border border-slate-100 hover:border-slate-200 rounded-xl space-y-2.5 transition"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${statusBadge}`}
                       >
@@ -625,9 +628,9 @@ export default function StudentProfilePage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       {item.follow_up_date && (
-                        <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500 mr-1">
                           <Calendar className="w-3 h-3 text-slate-400" />
                           <span>Follow-up: <strong>{item.follow_up_date}</strong></span>
                           {item.is_follow_up_due && (
@@ -637,6 +640,16 @@ export default function StudentProfilePage() {
                           )}
                         </div>
                       )}
+
+                      {/* Phase 15: Observed Change Button */}
+                      <button
+                        onClick={() => setSelectedEffectivenessId(item.id)}
+                        className="px-2.5 py-1 text-[11px] font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-lg transition inline-flex items-center gap-1 cursor-pointer"
+                        title="View observed pre- vs post-intervention risk trajectory"
+                      >
+                        <Activity className="w-3 h-3 text-emerald-600" />
+                        <span>Trajectory</span>
+                      </button>
 
                       <button
                         onClick={() => handleOpenEditIntervention(item)}
@@ -717,13 +730,20 @@ export default function StudentProfilePage() {
         )}
       </div>
 
-      {/* Intervention Modal */}
+      {/* Intervention Edit / Create Modal */}
       <InterventionModal
         isOpen={isInterventionModalOpen}
         onClose={() => setIsInterventionModalOpen(false)}
         onSuccess={handleInterventionSuccess}
         student={profileData?.student}
         initialData={interventionInitialData}
+      />
+
+      {/* Phase 15: Observed Trajectory Effectiveness Modal */}
+      <EffectivenessModal
+        isOpen={!!selectedEffectivenessId}
+        onClose={() => setSelectedEffectivenessId(null)}
+        interventionId={selectedEffectivenessId}
       />
     </div>
   );

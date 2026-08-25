@@ -1,39 +1,26 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 /**
- * Generic API request wrapper with standardized JSON response and error handling.
+ * Custom fetch wrapper with error handling.
  */
-async function fetchJson(endpoint, options = {}) {
-  const url = `${API_BASE_URL}${endpoint}`;
-  try {
-    const response = await fetch(url, options);
-
-    if (!response.ok) {
-      let errorDetail = `Request failed with status ${response.status}`;
-      try {
-        const errJson = await response.json();
-        if (errJson && errJson.detail) {
-          errorDetail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
-        }
-      } catch {}
-      const error = new Error(errorDetail);
-      error.status = response.status;
-      throw error;
-    }
-
-    if (response.status === 204) {
-      return null;
-    }
-
-    return await response.json();
-  } catch (err) {
-    if (err.name === 'TypeError' && err.message.includes('fetch')) {
-      const connError = new Error('Backend connection refused. Ensure the Pathwise FastAPI server is running.');
-      connError.status = 503;
-      throw connError;
-    }
-    throw err;
+async function fetchJson(url, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${url}`, options);
+  if (!response.ok) {
+    let errorDetail = `Request failed with status ${response.status}`;
+    try {
+      const errJson = await response.json();
+      if (errJson && errJson.detail) {
+        errorDetail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
+      }
+    } catch {}
+    const error = new Error(errorDetail);
+    error.status = response.status;
+    throw error;
   }
+  if (response.status === 204) {
+    return null;
+  }
+  return await response.json();
 }
 
 /**
@@ -44,59 +31,63 @@ export async function checkHealth() {
 }
 
 /**
- * High-level dashboard aggregate metrics and distributions.
+ * Retrieve high-level institutional dashboard summary metrics and distributions.
  */
 export async function getDashboardOverview() {
   return await fetchJson('/api/dashboard/overview');
 }
 
 /**
- * Department-level risk metrics and distribution.
+ * Retrieve department-level risk metrics and distribution.
  */
 export async function getDepartmentAnalytics() {
   return await fetchJson('/api/dashboard/departments');
 }
 
 /**
- * Paginated student directory with search and multi-attribute filters.
+ * Retrieve paginated and filtered list of students.
  */
 export async function getStudents({
   page = 1,
   pageSize = 20,
   search = '',
-  department = '',
-  semester = '',
   riskTier = '',
   trend = '',
+  department = '',
+  semester = '',
+  sortBy = 'computed_at',
+  sortOrder = 'desc',
 } = {}) {
   const params = new URLSearchParams();
   params.append('page', page);
   params.append('page_size', pageSize);
   if (search) params.append('search', search);
-  if (department) params.append('department', department);
-  if (semester) params.append('semester', semester);
   if (riskTier) params.append('risk_tier', riskTier);
   if (trend) params.append('trend', trend);
+  if (department) params.append('department', department);
+  if (semester) params.append('semester', semester);
+  if (sortBy) params.append('sort_by', sortBy);
+  if (sortOrder) params.append('sort_order', sortOrder);
 
   return await fetchJson(`/api/students?${params.toString()}`);
 }
 
 /**
- * Complete student profile dossier by student ID.
+ * Retrieve comprehensive academic profile for a single student.
  */
 export async function getStudentProfile(studentId) {
   return await fetchJson(`/api/students/${studentId}`);
 }
 
 /**
- * Student risk assessment & explanation (Read-Only on-demand calculation).
+ * Retrieve current dynamic fused risk assessment and explanation for a student.
  */
 export async function getStudentAssessment(studentId) {
   return await fetchJson(`/api/students/${studentId}/assessment`);
 }
 
 /**
- * Compute and persist assessment snapshot.
+ * Compute and persist risk assessment snapshot into history for a student.
  */
 export async function computeAndPersistAssessment(studentId) {
   return await fetchJson(`/api/students/${studentId}/assessment`, {
@@ -166,27 +157,25 @@ export async function getNotifications({
   pageSize = 20,
   unreadOnly = false,
   severity = '',
-  studentId = null,
 } = {}) {
   const params = new URLSearchParams();
   params.append('page', page);
   params.append('page_size', pageSize);
   if (unreadOnly) params.append('unread_only', 'true');
   if (severity) params.append('severity', severity);
-  if (studentId) params.append('student_id', studentId);
 
   return await fetchJson(`/api/notifications?${params.toString()}`);
 }
 
 /**
- * Get count of unread notifications.
+ * Get quick count of total unread notifications for badge display.
  */
 export async function getUnreadNotificationCount() {
   return await fetchJson('/api/notifications/unread-count');
 }
 
 /**
- * Mark a specific notification as read.
+ * Mark a single notification as read.
  */
 export async function markNotificationAsRead(notificationId) {
   return await fetchJson(`/api/notifications/${notificationId}/read`, {
@@ -195,7 +184,7 @@ export async function markNotificationAsRead(notificationId) {
 }
 
 /**
- * Mark all unread notifications as read.
+ * Mark all notifications in the system as read.
  */
 export async function markAllNotificationsAsRead() {
   return await fetchJson('/api/notifications/read-all', {
@@ -280,4 +269,42 @@ export async function deleteIntervention(interventionId) {
  */
 export async function getInterventionsSummary() {
   return await fetchJson('/api/interventions/summary');
+}
+
+/**
+ * =========================================================================
+ * PHASE 15 — INTERVENTION EFFECTIVENESS & FOLLOW-UPS
+ * =========================================================================
+ */
+
+/**
+ * Retrieve observed before/after risk trajectory metrics for a specific intervention.
+ */
+export async function getInterventionEffectiveness(interventionId) {
+  return await fetchJson(`/api/interventions/${interventionId}/effectiveness`);
+}
+
+/**
+ * Get aggregate summary metrics of observed trajectory outcomes.
+ */
+export async function getEffectivenessSummary() {
+  return await fetchJson('/api/interventions/effectiveness/summary');
+}
+
+/**
+ * Retrieve paginated scheduled follow-ups with derived urgency state.
+ */
+export async function getFollowUps({
+  page = 1,
+  pageSize = 20,
+  state = '',
+  studentId = null,
+} = {}) {
+  const params = new URLSearchParams();
+  params.append('page', page);
+  params.append('page_size', pageSize);
+  if (state) params.append('state', state);
+  if (studentId) params.append('student_id', studentId);
+
+  return await fetchJson(`/api/interventions/follow-ups?${params.toString()}`);
 }

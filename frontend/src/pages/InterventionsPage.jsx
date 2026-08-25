@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   HeartHandshake,
   Plus,
-  Filter,
   RefreshCw,
-  User,
   Calendar,
   Clock,
   CheckCircle2,
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
   Edit2,
-  FileText,
+  Activity,
+  TrendingDown,
+  TrendingUp,
+  Minus,
+  Info,
 } from 'lucide-react';
-import { getInterventions, getInterventionsSummary } from '../utils/api';
+import { getInterventions, getInterventionsSummary, getEffectivenessSummary } from '../utils/api';
 import InterventionModal from '../components/interventions/InterventionModal';
+import EffectivenessModal from '../components/interventions/EffectivenessModal';
 import { SkeletonTable } from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
 import EmptyState from '../components/common/EmptyState';
@@ -56,18 +58,31 @@ export default function InterventionsPage() {
     follow_ups_due_count: 0,
   });
 
+  const [effectivenessSummary, setEffectivenessSummary] = useState({
+    total_interventions: 0,
+    evaluated_interventions: 0,
+    improved_count: 0,
+    stable_count: 0,
+    worsened_count: 0,
+    awaiting_reassessment_count: 0,
+    insufficient_data_count: 0,
+    average_score_change: null,
+    disclaimer: '',
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalInitialData, setModalInitialData] = useState(null);
+  const [selectedEffectivenessId, setSelectedEffectivenessId] = useState(null);
   const [successToast, setSuccessToast] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [listRes, summaryRes] = await Promise.all([
+      const [listRes, summaryRes, effSummaryRes] = await Promise.all([
         getInterventions({
           page,
           pageSize,
@@ -76,9 +91,11 @@ export default function InterventionsPage() {
           followUpsDue: followUpsDueOnly,
         }),
         getInterventionsSummary(),
+        getEffectivenessSummary(),
       ]);
       setData(listRes);
       setSummary(summaryRes);
+      setEffectivenessSummary(effSummaryRes);
     } catch (err) {
       console.error('Failed to load interventions:', err);
       setError(err.message || 'Unable to retrieve intervention records.');
@@ -149,7 +166,7 @@ export default function InterventionsPage() {
         </div>
       )}
 
-      {/* Summary KPI Cards */}
+      {/* Operational Summary KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-card">
           <p className="text-[11px] font-medium text-slate-400">Total Actions</p>
@@ -391,7 +408,17 @@ export default function InterventionsPage() {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap space-x-1.5">
+                        {/* Phase 15: Trajectory Button */}
+                        <button
+                          onClick={() => setSelectedEffectivenessId(item.id)}
+                          className="px-2.5 py-1 text-[11px] font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-lg transition inline-flex items-center gap-1 cursor-pointer"
+                          title="View observed risk trajectory"
+                        >
+                          <Activity className="w-3 h-3 text-emerald-600" />
+                          <span>Trajectory</span>
+                        </button>
+
                         <button
                           onClick={(e) => handleOpenEdit(item, e)}
                           className="px-2.5 py-1 text-[11px] font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition inline-flex items-center gap-1 cursor-pointer"
@@ -440,12 +467,103 @@ export default function InterventionsPage() {
         </div>
       )}
 
+      {/* Phase 15: Secondary Aggregate Analytics Section */}
+      <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-card space-y-4">
+        <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-emerald-600" />
+              <span>Observed Post-Intervention Trajectory Outcomes</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Macro-level comparison between pre-intervention baseline and subsequent risk assessments across the cohort
+            </p>
+          </div>
+          <span className="text-[10px] font-mono text-slate-400">
+            Evaluated: {effectivenessSummary.evaluated_interventions} of {effectivenessSummary.total_interventions} actions
+          </span>
+        </div>
+
+        {/* Disclaimer Banner */}
+        <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-start gap-2 text-xs text-slate-600 leading-relaxed">
+          <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+          <span>
+            {effectivenessSummary.disclaimer ||
+              'Observed changes describe student risk assessments over time and do not establish that an intervention caused the change.'}
+          </span>
+        </div>
+
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+          <div className="p-3.5 bg-emerald-50/50 border border-emerald-100 rounded-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-emerald-800">Improved</span>
+              <TrendingDown className="w-4 h-4 text-emerald-600" />
+            </div>
+            <p className="text-xl font-bold text-emerald-800 mt-1">
+              {effectivenessSummary.improved_count}
+            </p>
+            <p className="text-[10px] text-emerald-700/80 mt-0.5">Risk reduced &ge; 5 pts</p>
+          </div>
+
+          <div className="p-3.5 bg-blue-50/50 border border-blue-100 rounded-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-blue-800">Stable</span>
+              <Minus className="w-4 h-4 text-blue-600" />
+            </div>
+            <p className="text-xl font-bold text-blue-800 mt-1">
+              {effectivenessSummary.stable_count}
+            </p>
+            <p className="text-[10px] text-blue-700/80 mt-0.5">Change &lt; 5 pts</p>
+          </div>
+
+          <div className="p-3.5 bg-rose-50/50 border border-rose-100 rounded-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-rose-800">Worsened</span>
+              <TrendingUp className="w-4 h-4 text-rose-600" />
+            </div>
+            <p className="text-xl font-bold text-rose-800 mt-1">
+              {effectivenessSummary.worsened_count}
+            </p>
+            <p className="text-[10px] text-rose-700/80 mt-0.5">Risk increased &ge; 5 pts</p>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-slate-700">Awaiting Assessment</span>
+              <Clock className="w-4 h-4 text-slate-400" />
+            </div>
+            <p className="text-xl font-bold text-slate-800 mt-1">
+              {effectivenessSummary.awaiting_reassessment_count}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Post snapshot pending</p>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl col-span-2 sm:col-span-1">
+            <span className="text-[11px] font-semibold text-slate-700 block">Avg Score Delta</span>
+            <p className="text-xl font-bold text-slate-800 mt-1">
+              {effectivenessSummary.average_score_change !== null && effectivenessSummary.average_score_change !== undefined
+                ? `${effectivenessSummary.average_score_change > 0 ? '+' : ''}${effectivenessSummary.average_score_change.toFixed(1)} pts`
+                : '—'}
+            </p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Across evaluated cases</p>
+          </div>
+        </div>
+      </div>
+
       {/* Intervention Modal */}
       <InterventionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleModalSuccess}
         initialData={modalInitialData}
+      />
+
+      {/* Phase 15: Observed Trajectory Effectiveness Modal */}
+      <EffectivenessModal
+        isOpen={!!selectedEffectivenessId}
+        onClose={() => setSelectedEffectivenessId(null)}
+        interventionId={selectedEffectivenessId}
       />
     </div>
   );
