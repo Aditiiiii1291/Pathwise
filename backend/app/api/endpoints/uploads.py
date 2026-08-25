@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -5,10 +6,14 @@ try:
     from app.core.database import get_db
     from app.schemas.upload import UploadSummary
     from app.services.ingestion import IngestionService
+    from app.api.deps import require_role
+    from app.models.user import User
 except ImportError:
     from backend.app.core.database import get_db
     from backend.app.schemas.upload import UploadSummary
     from backend.app.services.ingestion import IngestionService
+    from backend.app.api.deps import require_role
+    from backend.app.models.user import User
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
@@ -20,10 +25,12 @@ MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 async def upload_dataset(
     data_type: str,
     file: UploadFile = File(...),
+    current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db),
 ):
     """
     Ingests and validates institutional datasets (CSV/XLSX).
+    Requires ADMIN role.
     Supported data types: students, attendance, marks, fees, attempts.
     Max upload size: 10MB.
     """

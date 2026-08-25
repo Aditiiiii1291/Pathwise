@@ -20,6 +20,8 @@ try:
         RecipientTypeEnum,
         NotificationStatusEnum,
     )
+    from app.models.user import User, UserRoleEnum
+    from app.models.refresh_token import RefreshToken
 except ImportError:
     from backend.app.models.student import Student
     from backend.app.models.mentor import Mentor
@@ -42,6 +44,8 @@ except ImportError:
         RecipientTypeEnum,
         NotificationStatusEnum,
     )
+    from backend.app.models.user import User, UserRoleEnum
+    from backend.app.models.refresh_token import RefreshToken
 
 __all__ = [
     "Student",
@@ -66,4 +70,7 @@ __all__ = [
     "NotificationSeverityEnum",
     "RecipientTypeEnum",
     "NotificationStatusEnum",
+    "User",
+    "UserRoleEnum",
+    "RefreshToken",
 ]

@@ -6,11 +6,15 @@ from sqlalchemy import func
 try:
     from app.core.database import get_db
     from app.models import Student, RiskSnapshot
+    from app.models.user import User
+    from app.api.deps import get_current_user
     from app.crud.snapshot import get_latest_risk_snapshot_subquery
     from app.schemas.api import DashboardOverviewResponse, DepartmentSummaryItem
 except ImportError:
     from backend.app.core.database import get_db
     from backend.app.models import Student, RiskSnapshot
+    from backend.app.models.user import User
+    from backend.app.api.deps import get_current_user
     from backend.app.crud.snapshot import get_latest_risk_snapshot_subquery
     from backend.app.schemas.api import DashboardOverviewResponse, DepartmentSummaryItem
 
@@ -18,6 +22,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/overview", response_model=DashboardOverviewResponse, status_code=status.HTTP_200_OK)
 def get_dashboard_overview(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -68,6 +73,7 @@ def get_dashboard_overview(
 
 @router.get("/departments", response_model=List[DepartmentSummaryItem], status_code=status.HTTP_200_OK)
 def get_department_analytics(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """

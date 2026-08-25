@@ -1,10 +1,143 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
+// =========================================================================
+// PHASE 16 — JWT AUTHENTICATION STATE & TOKEN MANAGEMENT
+// =========================================================================
+
 /**
- * Custom fetch wrapper with error handling.
+ * Access Token is kept in application memory for defense-in-depth against XSS.
+ * Refresh Token and minimal user profile are kept in localStorage for session persistence across refreshes.
+ *
+ * Security Trade-off Documentation:
+ * Storing the rotating refresh token in localStorage allows user persistence across page reloads.
+ * The refresh token is single-use/rotating and revocable server-side.
  */
-async function fetchJson(url, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${url}`, options);
+let inMemoryAccessToken = null;
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function subscribeTokenRefresh(cb) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token) {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
+export function getAccessToken() {
+  return inMemoryAccessToken;
+}
+
+export function setAuthSession({ access_token, refresh_token, user }) {
+  inMemoryAccessToken = access_token;
+  if (refresh_token) {
+    localStorage.setItem('pathwise_refresh_token', refresh_token);
+  }
+  if (user) {
+    localStorage.setItem('pathwise_user', JSON.stringify(user));
+  }
+}
+
+export function clearAuthSession() {
+  inMemoryAccessToken = null;
+  localStorage.removeItem('pathwise_refresh_token');
+  localStorage.removeItem('pathwise_user');
+}
+
+export function getStoredUser() {
+  try {
+    const raw = localStorage.getItem('pathwise_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredRefreshToken() {
+  return localStorage.getItem('pathwise_refresh_token');
+}
+
+export function isAuthenticated() {
+  return Boolean(inMemoryAccessToken || getStoredRefreshToken());
+}
+
+/**
+ * Custom fetch wrapper with automatic JWT Bearer header attachment and
+ * single-attempt 401 token refresh retry.
+ */
+async function fetchJson(url, options = {}, isRetry = false) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  // If options.body is FormData, remove Content-Type to allow browser boundary setup
+  if (options.body instanceof FormData) {
+    delete headers['Content-Type'];
+  }
+
+  // Attach Bearer Access Token if present
+  if (inMemoryAccessToken && !headers['Authorization']) {
+    headers['Authorization'] = `Bearer ${inMemoryAccessToken}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    ...options,
+    headers,
+  });
+
+  // Handle 401 Unauthorized with automatic refresh token rotation
+  if (response.status === 401 && !isRetry && !url.includes('/api/auth/login') && !url.includes('/api/auth/refresh')) {
+    const refreshToken = getStoredRefreshToken();
+    if (refreshToken) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+          });
+
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            setAuthSession(data);
+            isRefreshing = false;
+            onRefreshed(data.access_token);
+            // Retry original request
+            return await fetchJson(url, options, true);
+          } else {
+            clearAuthSession();
+            isRefreshing = false;
+            onRefreshed(null);
+            if (window.location.pathname !== '/login') {
+              window.location.href = '/login';
+            }
+          }
+        } catch {
+          clearAuthSession();
+          isRefreshing = false;
+          onRefreshed(null);
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }
+      } else {
+        // Wait for active refresh to finish
+        return new Promise((resolve, reject) => {
+          subscribeTokenRefresh((token) => {
+            if (token) {
+              resolve(fetchJson(url, options, true));
+            } else {
+              reject(new Error('Session expired. Please log in again.'));
+            }
+          });
+        });
+      }
+    }
+  }
+
   if (!response.ok) {
     let errorDetail = `Request failed with status ${response.status}`;
     try {
@@ -17,9 +150,11 @@ async function fetchJson(url, options = {}) {
     error.status = response.status;
     throw error;
   }
+
   if (response.status === 204) {
     return null;
   }
+
   return await response.json();
 }
 
@@ -31,22 +166,93 @@ export async function checkHealth() {
 }
 
 /**
- * Retrieve high-level institutional dashboard summary metrics and distributions.
+ * =========================================================================
+ * PHASE 16 — AUTHENTICATION ENDPOINTS
+ * =========================================================================
  */
+
+/**
+ * Authenticates user with username and password.
+ */
+export async function login(username, password) {
+  const data = await fetchJson('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+  setAuthSession(data);
+  return data;
+}
+
+/**
+ * Rotates the refresh token and updates access token.
+ */
+export async function refreshAuthToken() {
+  const refreshToken = getStoredRefreshToken();
+  if (!refreshToken) {
+    throw new Error('No refresh token found.');
+  }
+  const data = await fetchJson('/api/auth/refresh', {
+    method: 'POST',
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+  setAuthSession(data);
+  return data;
+}
+
+/**
+ * Logs out and revokes the active refresh token.
+ */
+export async function logout() {
+  const refreshToken = getStoredRefreshToken();
+  if (refreshToken) {
+    try {
+      await fetchJson('/api/auth/logout', {
+        method: 'POST',
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+    } catch {}
+  }
+  clearAuthSession();
+}
+
+/**
+ * Retrieves profile of currently authenticated user.
+ */
+export async function getCurrentUserProfile() {
+  return await fetchJson('/api/auth/me');
+}
+
+/**
+ * Live setup validation: checks username syntax and availability.
+ */
+export async function checkUsernameAvailability(username) {
+  return await fetchJson(`/api/auth/check-username?username=${encodeURIComponent(username)}`);
+}
+
+/**
+ * ADMIN only: Creates a new user account.
+ */
+export async function createUserAccount(payload) {
+  return await fetchJson('/api/auth/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * =========================================================================
+ * DASHBOARD & ACADEMICS ENDPOINTS
+ * =========================================================================
+ */
+
 export async function getDashboardOverview() {
   return await fetchJson('/api/dashboard/overview');
 }
 
-/**
- * Retrieve department-level risk metrics and distribution.
- */
 export async function getDepartmentAnalytics() {
   return await fetchJson('/api/dashboard/departments');
 }
 
-/**
- * Retrieve paginated and filtered list of students.
- */
 export async function getStudents({
   page = 1,
   pageSize = 20,
@@ -72,86 +278,47 @@ export async function getStudents({
   return await fetchJson(`/api/students?${params.toString()}`);
 }
 
-/**
- * Retrieve comprehensive academic profile for a single student.
- */
 export async function getStudentProfile(studentId) {
   return await fetchJson(`/api/students/${studentId}`);
 }
 
-/**
- * Retrieve current dynamic fused risk assessment and explanation for a student.
- */
 export async function getStudentAssessment(studentId) {
   return await fetchJson(`/api/students/${studentId}/assessment`);
 }
 
-/**
- * Compute and persist risk assessment snapshot into history for a student.
- */
 export async function computeAndPersistAssessment(studentId) {
   return await fetchJson(`/api/students/${studentId}/assessment`, {
     method: 'POST',
   });
 }
 
-/**
- * Retrieve current active rule engine configuration.
- */
 export async function getRulesConfig() {
   return await fetchJson('/api/rules');
 }
 
-/**
- * Update rule engine weights and thresholds.
- */
 export async function updateRulesConfig(config) {
   return await fetchJson('/api/rules', {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(config),
   });
 }
 
-/**
- * Upload and ingest institutional CSV/XLSX dataset.
- */
 export async function uploadDataset(dataType, file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/api/uploads/${dataType}`, {
+  return await fetchJson(`/api/uploads/${dataType}`, {
     method: 'POST',
     body: formData,
   });
-
-  if (!response.ok) {
-    let errorDetail = `Upload failed with status ${response.status}`;
-    try {
-      const errJson = await response.json();
-      if (errJson && errJson.detail) {
-        errorDetail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
-      }
-    } catch {}
-    const error = new Error(errorDetail);
-    error.status = response.status;
-    throw error;
-  }
-
-  return await response.json();
 }
 
 /**
  * =========================================================================
- * PHASE 13 — NOTIFICATION ENDPOINTS
+ * NOTIFICATIONS ENDPOINTS
  * =========================================================================
  */
 
-/**
- * Retrieve paginated notifications with filters.
- */
 export async function getNotifications({
   page = 1,
   pageSize = 20,
@@ -167,25 +334,16 @@ export async function getNotifications({
   return await fetchJson(`/api/notifications?${params.toString()}`);
 }
 
-/**
- * Get quick count of total unread notifications for badge display.
- */
 export async function getUnreadNotificationCount() {
   return await fetchJson('/api/notifications/unread-count');
 }
 
-/**
- * Mark a single notification as read.
- */
 export async function markNotificationAsRead(notificationId) {
   return await fetchJson(`/api/notifications/${notificationId}/read`, {
     method: 'PATCH',
   });
 }
 
-/**
- * Mark all notifications in the system as read.
- */
 export async function markAllNotificationsAsRead() {
   return await fetchJson('/api/notifications/read-all', {
     method: 'PATCH',
@@ -194,26 +352,17 @@ export async function markAllNotificationsAsRead() {
 
 /**
  * =========================================================================
- * PHASE 14 — INTERVENTION & COUNSELLING ENDPOINTS
+ * INTERVENTIONS ENDPOINTS
  * =========================================================================
  */
 
-/**
- * Create a new intervention / counselling record for a student.
- */
 export async function createIntervention(payload) {
   return await fetchJson('/api/interventions', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(payload),
   });
 }
 
-/**
- * Retrieve paginated list of interventions with filters.
- */
 export async function getInterventions({
   page = 1,
   pageSize = 20,
@@ -235,65 +384,35 @@ export async function getInterventions({
   return await fetchJson(`/api/interventions?${params.toString()}`);
 }
 
-/**
- * Retrieve single intervention by ID.
- */
 export async function getInterventionById(interventionId) {
   return await fetchJson(`/api/interventions/${interventionId}`);
 }
 
-/**
- * Update an existing intervention (status, title, notes, follow-up date).
- */
 export async function updateIntervention(interventionId, payload) {
   return await fetchJson(`/api/interventions/${interventionId}`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(payload),
   });
 }
 
-/**
- * Administratively delete an intervention record.
- */
 export async function deleteIntervention(interventionId) {
   return await fetchJson(`/api/interventions/${interventionId}`, {
     method: 'DELETE',
   });
 }
 
-/**
- * Get aggregate summary counts of interventions (active, planned, completed, due).
- */
 export async function getInterventionsSummary() {
   return await fetchJson('/api/interventions/summary');
 }
 
-/**
- * =========================================================================
- * PHASE 15 — INTERVENTION EFFECTIVENESS & FOLLOW-UPS
- * =========================================================================
- */
-
-/**
- * Retrieve observed before/after risk trajectory metrics for a specific intervention.
- */
 export async function getInterventionEffectiveness(interventionId) {
   return await fetchJson(`/api/interventions/${interventionId}/effectiveness`);
 }
 
-/**
- * Get aggregate summary metrics of observed trajectory outcomes.
- */
 export async function getEffectivenessSummary() {
   return await fetchJson('/api/interventions/effectiveness/summary');
 }
 
-/**
- * Retrieve paginated scheduled follow-ups with derived urgency state.
- */
 export async function getFollowUps({
   page = 1,
   pageSize = 20,

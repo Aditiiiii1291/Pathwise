@@ -46,12 +46,7 @@ def client(db_session):
         finally:
             pass
 
-    # Dynamically override all route database dependencies
-    for route in app.routes:
-        if hasattr(route, "dependant"):
-            for dep in route.dependant.dependencies:
-                app.dependency_overrides[dep.call] = override_get_db
-
+    app.dependency_overrides[get_db] = override_get_db
     test_client = TestClient(app)
     yield test_client
     app.dependency_overrides.clear()

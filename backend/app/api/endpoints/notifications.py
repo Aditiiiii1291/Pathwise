@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 
 try:
     from app.core.database import get_db
+    from app.models.user import User
+    from app.api.deps import get_current_user
     from app.schemas.notification import (
         NotificationItem,
         PaginatedNotificationResponse,
@@ -13,6 +15,8 @@ try:
     from app.services.notifications import NotificationService
 except ImportError:
     from backend.app.core.database import get_db
+    from backend.app.models.user import User
+    from backend.app.api.deps import get_current_user
     from backend.app.schemas.notification import (
         NotificationItem,
         PaginatedNotificationResponse,
@@ -50,10 +54,12 @@ def list_notifications(
     unread_only: bool = Query(False, description="Filter unread notifications only"),
     severity: Optional[str] = Query(None, description="Filter by severity (INFO, WARNING, HIGH, CRITICAL)"),
     student_id: Optional[int] = Query(None, description="Filter by student ID"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Retrieves a paginated list of in-app notifications, ordered newest first.
+    Requires authenticated user.
     """
     items, total, pages, unread_count = NotificationService.get_notifications(
         db=db,
@@ -77,10 +83,12 @@ def list_notifications(
 
 @router.get("/unread-count", response_model=UnreadCountResponse, status_code=status.HTTP_200_OK)
 def get_unread_notification_count(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Returns the total count of unread notifications for quick UI badge polling.
+    Requires authenticated user.
     """
     count = NotificationService.get_unread_count(db)
     return UnreadCountResponse(unread_count=count)
@@ -88,10 +96,12 @@ def get_unread_notification_count(
 @router.patch("/{notification_id}/read", response_model=NotificationItem, status_code=status.HTTP_200_OK)
 def mark_notification_as_read(
     notification_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Marks a single notification as read.
+    Requires authenticated user.
     """
     notif = NotificationService.mark_as_read(db, notification_id)
     if not notif:
@@ -103,10 +113,12 @@ def mark_notification_as_read(
 
 @router.patch("/read-all", response_model=MarkReadResponse, status_code=status.HTTP_200_OK)
 def mark_all_notifications_as_read(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Marks all unread notifications as read.
+    Requires authenticated user.
     """
     updated_count = NotificationService.mark_all_as_read(db)
     return MarkReadResponse(success=True, updated_count=updated_count)

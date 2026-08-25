@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import OverviewPage from './pages/OverviewPage';
 import StudentsPage from './pages/StudentsPage';
@@ -11,7 +11,14 @@ import UploadPage from './pages/UploadPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ConnectionStatusPage from './pages/ConnectionStatusPage';
-import { checkHealth } from './utils/api';
+import { checkHealth, isAuthenticated } from './utils/api';
+
+function ProtectedRoute({ children }) {
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
 export default function App() {
   const [startupStatus, setStartupStatus] = useState('checking'); // 'checking' | 'connected' | 'unavailable'
@@ -63,7 +70,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<Layout />}>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<OverviewPage />} />
           <Route path="students" element={<StudentsPage />} />
           <Route path="students/:id" element={<StudentProfilePage />} />

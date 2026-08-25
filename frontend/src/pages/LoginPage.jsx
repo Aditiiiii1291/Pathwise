@@ -1,30 +1,46 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, ArrowRight, Info, Lock, Mail } from 'lucide-react';
+import { LogIn, Lock, User, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import PathwiseLogo from '../components/common/PathwiseLogo';
-
-// =========================================================================
-// DEVELOPMENT SHELL NOTICE:
-// Real authentication, password hashing, JWT tokens, and RBAC belong to a
-// subsequent security phase.
-//
-// In this development shell:
-// - Password values are NEVER persisted or stored (no localStorage / sessionStorage)
-// - No fake authentication tokens are created
-// - No fake credential validation is performed
-// - Clicking "Sign In" simply transitions the user to development mode ('/')
-// =========================================================================
+import { login } from '../utils/api';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('advisor@institution.edu');
-  const [password, setPassword] = useState('••••••••••••');
-  const [rememberMe, setRememberMe] = useState(true);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    // Non-production development transition only
-    navigate('/');
+    setError(null);
+
+    // 1. Client-side local formatting validation
+    const trimmedUser = username.trim();
+    if (!trimmedUser) {
+      setError('Enter your username.');
+      return;
+    }
+    if (!password) {
+      setError('Enter your password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await login(trimmedUser, password);
+      navigate('/');
+    } catch (err) {
+      // Server authentication failure: protect against username enumeration
+      if (err.status === 401 || err.message?.includes('401')) {
+        setError('Invalid username or password.');
+      } else {
+        setError(err.message || 'Unable to connect to Pathwise service. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,25 +65,37 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {/* Error Banner */}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200/80 rounded-2xl flex items-center gap-2.5 text-xs text-red-700 animate-fadeIn">
+              <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSignIn} className="space-y-4">
-            {/* Email / Username Field */}
+            {/* Username Field */}
             <div className="space-y-1.5">
               <label
-                htmlFor="email"
+                htmlFor="username"
                 className="block text-xs font-semibold text-slate-700"
               >
-                Institutional Email or Username
+                Username
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  id="email"
+                  id="username"
                   type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="advisor@university.edu"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  placeholder="Enter institutional username"
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 focus:bg-white transition"
-                  required
+                  autoComplete="username"
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -81,68 +109,56 @@ export default function LoginPage() {
                 >
                   Password
                 </label>
-                <span className="text-[10px] text-slate-400 select-none">
-                  Available when institutional authentication is enabled
-                </span>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter institutional password"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 focus:bg-white transition"
-                  required
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  placeholder="Enter your password"
+                  className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 focus:bg-white transition"
+                  autoComplete="current-password"
+                  disabled={loading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
-            </div>
-
-            {/* Remember Me Checkbox */}
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                id="remember"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500/20 border-slate-300"
-              />
-              <label htmlFor="remember" className="text-xs text-slate-500 select-none">
-                Remember this workstation session
-              </label>
             </div>
 
             {/* Primary Sign In Button */}
             <button
               type="submit"
-              className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2 mt-2 cursor-pointer"
+              disabled={loading}
+              className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-semibold rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2 mt-4 cursor-pointer"
             >
-              <LogIn className="w-4 h-4" />
-              <span>Sign In to Dashboard</span>
-            </button>
-
-            {/* Development Shortcut Button */}
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium rounded-xl text-xs border border-slate-200/80 transition flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>Continue in Development Mode</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Verifying credentials...</span>
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In to Dashboard</span>
+                </>
+              )}
             </button>
           </form>
-
-          {/* Security & Future Auth Notice */}
-          <div className="p-3.5 bg-blue-50/60 border border-blue-100 rounded-2xl flex items-start gap-2.5 text-xs text-blue-900 leading-relaxed">
-            <Info className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold block text-[11px]">Authentication Notice</span>
-              <span className="text-[11px] text-blue-700/90">
-                Institutional SSO and secure authentication will be integrated in a future security phase. This interface is currently a development shell.
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}

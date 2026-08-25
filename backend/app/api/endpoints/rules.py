@@ -8,33 +8,42 @@ try:
     from app.schemas.rules import RuleEngineConfig, RuleWeights, RuleThresholds
     from app.schemas.api import RuleConfigUpdate
     from app.services.rules import RuleEngine
+    from app.api.deps import get_current_user, require_role
+    from app.models.user import User
 except ImportError:
     from backend.app.core.database import get_db
     from backend.app.models import RuleConfig
     from backend.app.schemas.rules import RuleEngineConfig, RuleWeights, RuleThresholds
     from backend.app.schemas.api import RuleConfigUpdate
     from backend.app.services.rules import RuleEngine
+    from backend.app.api.deps import get_current_user, require_role
+    from backend.app.models.user import User
 
 router = APIRouter(prefix="/rules", tags=["rules"])
+
 
 @router.get("", response_model=RuleEngineConfig, status_code=status.HTTP_200_OK)
 def get_rules(
     department: Optional[str] = Query(None, description="Department-specific rules if configured"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Retrieves active rule weights and thresholds for a department or institutional default.
+    Requires authenticated user.
     """
     return RuleEngine.load_config_from_db(db, department=department)
+
 
 @router.put("", response_model=RuleEngineConfig, status_code=status.HTTP_200_OK)
 def update_rules(
     body: RuleConfigUpdate,
+    current_user: User = Depends(require_role(["ADMIN"])),
     db: Session = Depends(get_db),
 ):
     """
     Updates rule engine configuration. Validates weight normalization (sum == 1.0).
-    Does NOT modify historical snapshots.
+    Requires ADMIN role. Does NOT modify historical snapshots.
     """
     # Look for existing rule configuration record
     config_record = None

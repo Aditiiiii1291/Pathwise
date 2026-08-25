@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 
 try:
     from app.core.database import get_db
+    from app.models.user import User
+    from app.api.deps import get_current_user
     from app.schemas.api import StudentAssessmentResponse
     from app.services.fusion import StudentDataFusionService
     from app.services.features import FeatureEngineeringService
@@ -13,6 +15,8 @@ try:
     from app.services.notifications import NotificationService
 except ImportError:
     from backend.app.core.database import get_db
+    from backend.app.models.user import User
+    from backend.app.api.deps import get_current_user
     from backend.app.schemas.api import StudentAssessmentResponse
     from backend.app.services.fusion import StudentDataFusionService
     from backend.app.services.features import FeatureEngineeringService
@@ -74,6 +78,7 @@ def _run_assessment_pipeline(student_id: int, db: Session):
 @router.get("/{student_id}/assessment", response_model=StudentAssessmentResponse, status_code=status.HTTP_200_OK)
 def get_student_assessment(
     student_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -90,6 +95,7 @@ def get_student_assessment(
 @router.post("/{student_id}/assessment", response_model=StudentAssessmentResponse, status_code=status.HTTP_200_OK)
 def calculate_and_save_student_assessment(
     student_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """

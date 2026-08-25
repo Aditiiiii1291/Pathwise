@@ -6,6 +6,8 @@ from sqlalchemy import func, desc
 try:
     from app.core.database import get_db
     from app.models import Student, RiskSnapshot
+    from app.models.user import User
+    from app.api.deps import get_current_user
     from app.crud.snapshot import get_latest_risk_snapshot_subquery, get_latest_risk_snapshot_for_student
     from app.schemas.api import (
         StudentListItem,
@@ -18,6 +20,8 @@ try:
 except ImportError:
     from backend.app.core.database import get_db
     from backend.app.models import Student, RiskSnapshot
+    from backend.app.models.user import User
+    from backend.app.api.deps import get_current_user
     from backend.app.crud.snapshot import get_latest_risk_snapshot_subquery, get_latest_risk_snapshot_for_student
     from backend.app.schemas.api import (
         StudentListItem,
@@ -39,6 +43,7 @@ def list_students(
     semester: Optional[int] = Query(None, ge=1, le=8, description="Filter by current semester"),
     risk_tier: Optional[str] = Query(None, description="Filter by latest risk tier (LOW, MEDIUM, HIGH, CRITICAL)"),
     trend: Optional[str] = Query(None, description="Filter by latest trend"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -112,6 +117,7 @@ def list_students(
 @router.get("/{student_id}", response_model=StudentProfileDetailResponse, status_code=status.HTTP_200_OK)
 def get_student_profile(
     student_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """

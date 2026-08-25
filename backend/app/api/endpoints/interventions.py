@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 
 try:
     from app.core.database import get_db
+    from app.models.user import User
+    from app.api.deps import get_current_user
     from app.schemas.intervention import (
         InterventionCreate,
         InterventionUpdate,
@@ -20,6 +22,8 @@ try:
     from app.services.intervention_effectiveness import InterventionEffectivenessService
 except ImportError:
     from backend.app.core.database import get_db
+    from backend.app.models.user import User
+    from backend.app.api.deps import get_current_user
     from backend.app.schemas.intervention import (
         InterventionCreate,
         InterventionUpdate,
@@ -41,17 +45,22 @@ router = APIRouter(prefix="/interventions", tags=["interventions"])
 @router.post("", response_model=InterventionItem, status_code=status.HTTP_201_CREATED)
 def create_intervention(
     payload: InterventionCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Creates a new counselling or intervention record for a student.
+    Enforces authenticated mentor attribution for MENTOR accounts.
     """
+    if isinstance(current_user, User) and current_user.role == "MENTOR" and current_user.mentor_id is not None:
+        payload.mentor_id = current_user.mentor_id
     intervention = InterventionService.create_intervention(db=db, payload=payload)
     return InterventionService.to_item_dto(intervention)
 
 
 @router.get("/summary", response_model=InterventionSummaryResponse, status_code=status.HTTP_200_OK)
 def get_interventions_summary(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -62,6 +71,7 @@ def get_interventions_summary(
 
 @router.get("/effectiveness/summary", response_model=AggregateEffectivenessSummary, status_code=status.HTTP_200_OK)
 def get_effectiveness_summary(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -76,6 +86,7 @@ def list_follow_ups(
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     state: Optional[str] = Query(None, description="Filter by state (OVERDUE, DUE_TODAY, UPCOMING, CLOSED, NO_FOLLOW_UP)"),
     student_id: Optional[int] = Query(None, description="Filter by student ID"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -103,6 +114,7 @@ def list_follow_ups(
 @router.get("/{intervention_id}/effectiveness", response_model=InterventionEffectivenessDetail, status_code=status.HTTP_200_OK)
 def get_intervention_effectiveness(
     intervention_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -126,6 +138,7 @@ def list_interventions(
     status: Optional[str] = Query(None, description="Filter by status (PLANNED, IN_PROGRESS, COMPLETED, CANCELLED)"),
     intervention_type: Optional[str] = Query(None, description="Filter by type (COUNSELLING, ACADEMIC_SUPPORT, etc.)"),
     follow_ups_due: bool = Query(False, description="Filter only interventions with follow-up due on or before today"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -156,6 +169,7 @@ def list_interventions(
 @router.get("/{intervention_id}", response_model=InterventionItem, status_code=status.HTTP_200_OK)
 def get_intervention_by_id(
     intervention_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -174,6 +188,7 @@ def get_intervention_by_id(
 def update_intervention(
     intervention_id: int,
     payload: InterventionUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -195,6 +210,7 @@ def update_intervention(
 @router.delete("/{intervention_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_intervention(
     intervention_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
