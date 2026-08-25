@@ -24,9 +24,12 @@ from app.services.auth import AuthService
 from app.schemas.auth import UserCreate
 
 try:
-    from ml.data_generation.generator import SyntheticDataGenerator
+    from app.data_generation.generator import SyntheticDataGenerator
 except ImportError:
-    SyntheticDataGenerator = None
+    try:
+        from ml.data_generation.generator import SyntheticDataGenerator
+    except ImportError:
+        SyntheticDataGenerator = None
 
 
 def seed_academic_cohort(db) -> int:

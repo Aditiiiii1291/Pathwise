@@ -4,7 +4,10 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from ml.data_generation.generator import SyntheticDataGenerator, TRAJECTORY_DISTRIBUTION
+try:
+    from app.data_generation.generator import SyntheticDataGenerator, TRAJECTORY_DISTRIBUTION
+except ImportError:
+    from ml.data_generation.generator import SyntheticDataGenerator, TRAJECTORY_DISTRIBUTION
 
 @pytest.fixture(scope="module")
 def synthetic_data(tmp_path_factory):
