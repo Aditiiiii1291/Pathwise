@@ -39,8 +39,8 @@ ENV/
 
 # Node / Frontend
 node_modules/
-/frontend/dist
-/frontend/dist-ssr
+dist/
+frontend/dist/
 *.local
 .eslintcache
 .stylelintcache

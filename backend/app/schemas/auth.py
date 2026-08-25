@@ -29,7 +29,7 @@ class UserResponse(BaseModel):
     role: str
     mentor_id: Optional[int] = None
     is_active: bool
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
 
 class TokenResponse(BaseModel):

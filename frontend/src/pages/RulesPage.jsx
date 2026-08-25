@@ -7,8 +7,9 @@ import {
   Info,
   RefreshCw,
   RotateCcw,
+  Lock,
 } from 'lucide-react';
-import { getRulesConfig, updateRulesConfig } from '../utils/api';
+import { getRulesConfig, updateRulesConfig, getStoredUser } from '../utils/api';
 import { SkeletonCard } from '../components/common/LoadingState';
 import ErrorState from '../components/common/ErrorState';
 
@@ -17,6 +18,8 @@ export default function RulesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [feedback, setFeedback] = useState(null);
+  const currentUser = getStoredUser();
+  const isAdmin = currentUser?.role === 'ADMIN';
 
   const [weights, setWeights] = useState({
     attendance: 0.3,
@@ -58,17 +61,21 @@ export default function RulesPage() {
   const isWeightValid = Math.abs(totalWeight - 1.0) < 0.001;
 
   const handleWeightChange = (key, value) => {
+    if (!isAdmin) return;
     const num = parseFloat(value) || 0;
     setWeights((prev) => ({ ...prev, [key]: num }));
   };
 
   const handleThresholdChange = (key, value) => {
+    if (!isAdmin) return;
     const num = parseFloat(value) || 0;
     setThresholds((prev) => ({ ...prev, [key]: num }));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!isAdmin) return;
+
     if (!isWeightValid) {
       setFeedback({
         type: 'error',
@@ -109,7 +116,7 @@ export default function RulesPage() {
         <button
           onClick={fetchConfig}
           disabled={loading || saving}
-          className="self-start sm:self-auto px-3 py-1.5 bg-white border border-slate-200/80 rounded-xl text-xs font-medium text-slate-600 shadow-subtle hover:bg-slate-50 transition flex items-center gap-1.5"
+          className="self-start sm:self-auto px-3 py-1.5 bg-white border border-slate-200/80 rounded-xl text-xs font-medium text-slate-600 shadow-subtle hover:bg-slate-50 transition flex items-center gap-1.5 cursor-pointer"
         >
           <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Reset to Loaded</span>
@@ -129,6 +136,19 @@ export default function RulesPage() {
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-6">
+          {/* Read-Only Notice for Non-Admin */}
+          {!isAdmin && (
+            <div className="p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-center gap-3 text-xs text-amber-900 shadow-subtle">
+              <Lock className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <span className="font-semibold block">Institutional View-Only Mode</span>
+                <span>
+                  Logged in as <strong>{currentUser?.role || 'Staff'}</strong> ({currentUser?.display_name}). Multi-factor rule weights and sensitivity thresholds can only be modified by Administrators.
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Feedback Alert */}
           {feedback && (
             <div
@@ -202,8 +222,11 @@ export default function RulesPage() {
                           min="0"
                           max="1"
                           value={val}
+                          disabled={!isAdmin || saving}
                           onChange={(e) => handleWeightChange(key, e.target.value)}
-                          className="w-16 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-mono font-semibold text-slate-800 text-right focus:outline-none focus:ring-1 focus:ring-brand-500"
+                          className={`w-16 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-mono font-semibold text-slate-800 text-right focus:outline-none focus:ring-1 focus:ring-brand-500 ${
+                            !isAdmin ? 'bg-slate-100 cursor-not-allowed opacity-75' : ''
+                          }`}
                         />
                         <span className="text-xs font-medium text-slate-400">({(val * 100).toFixed(0)}%)</span>
                       </div>
@@ -215,8 +238,11 @@ export default function RulesPage() {
                       max="1"
                       step="0.01"
                       value={val}
+                      disabled={!isAdmin || saving}
                       onChange={(e) => handleWeightChange(key, e.target.value)}
-                      className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                      className={`w-full h-1.5 bg-slate-200 rounded-lg appearance-none accent-brand-500 ${
+                        isAdmin ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                      }`}
                     />
                     <p className="text-[11px] text-slate-400">{desc}</p>
                   </div>
@@ -239,14 +265,17 @@ export default function RulesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="p-3.5 bg-slate-50/60 border border-slate-100 rounded-xl space-y-1">
                 <label className="text-xs font-semibold text-slate-700 block">
-                  Min. Attendance (%)
+                  Min Attendance (%)
                 </label>
                 <input
                   type="number"
                   step="0.5"
                   value={thresholds.attendance_min_pct || 75.0}
+                  disabled={!isAdmin || saving}
                   onChange={(e) => handleThresholdChange('attendance_min_pct', e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium"
+                  className={`w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium ${
+                    !isAdmin ? 'bg-slate-100 cursor-not-allowed opacity-75' : ''
+                  }`}
                 />
                 <span className="text-[10px] text-slate-400 block">Default: 75.0%</span>
               </div>
@@ -259,8 +288,11 @@ export default function RulesPage() {
                   type="number"
                   step="0.5"
                   value={thresholds.attendance_drop_pp || 10.0}
+                  disabled={!isAdmin || saving}
                   onChange={(e) => handleThresholdChange('attendance_drop_pp', e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium"
+                  className={`w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium ${
+                    !isAdmin ? 'bg-slate-100 cursor-not-allowed opacity-75' : ''
+                  }`}
                 />
                 <span className="text-[10px] text-slate-400 block">Default: 10.0 pp</span>
               </div>
@@ -273,22 +305,28 @@ export default function RulesPage() {
                   type="number"
                   step="0.5"
                   value={thresholds.marks_passing_pct || 40.0}
+                  disabled={!isAdmin || saving}
                   onChange={(e) => handleThresholdChange('marks_passing_pct', e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium"
+                  className={`w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium ${
+                    !isAdmin ? 'bg-slate-100 cursor-not-allowed opacity-75' : ''
+                  }`}
                 />
                 <span className="text-[10px] text-slate-400 block">Default: 40.0%</span>
               </div>
 
               <div className="p-3.5 bg-slate-50/60 border border-slate-100 rounded-xl space-y-1">
                 <label className="text-xs font-semibold text-slate-700 block">
-                  Marks Drop (pp/stage)
+                  Marks Drop (pp)
                 </label>
                 <input
                   type="number"
                   step="0.5"
                   value={thresholds.marks_drop_pp || 5.0}
+                  disabled={!isAdmin || saving}
                   onChange={(e) => handleThresholdChange('marks_drop_pp', e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium"
+                  className={`w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium ${
+                    !isAdmin ? 'bg-slate-100 cursor-not-allowed opacity-75' : ''
+                  }`}
                 />
                 <span className="text-[10px] text-slate-400 block">Default: 5.0 pp</span>
               </div>
@@ -301,10 +339,13 @@ export default function RulesPage() {
                   type="number"
                   step="1"
                   value={thresholds.backlog_critical_count || 3}
+                  disabled={!isAdmin || saving}
                   onChange={(e) => handleThresholdChange('backlog_critical_count', e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium"
+                  className={`w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium ${
+                    !isAdmin ? 'bg-slate-100 cursor-not-allowed opacity-75' : ''
+                  }`}
                 />
-                <span className="text-[10px] text-slate-400 block">Default: 3</span>
+                <span className="text-[10px] text-slate-400 block">Default: 3 backlogs</span>
               </div>
 
               <div className="p-3.5 bg-slate-50/60 border border-slate-100 rounded-xl space-y-1">
@@ -315,8 +356,11 @@ export default function RulesPage() {
                   type="number"
                   step="1"
                   value={thresholds.fee_overdue_days || 30}
+                  disabled={!isAdmin || saving}
                   onChange={(e) => handleThresholdChange('fee_overdue_days', e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium"
+                  className={`w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium ${
+                    !isAdmin ? 'bg-slate-100 cursor-not-allowed opacity-75' : ''
+                  }`}
                 />
                 <span className="text-[10px] text-slate-400 block">Default: 30 days</span>
               </div>
@@ -335,20 +379,22 @@ export default function RulesPage() {
           </div>
 
           {/* Submit Action Bar */}
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={saving || !isWeightValid}
-              className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-semibold rounded-xl text-xs shadow-md transition flex items-center gap-2"
-            >
-              {saving ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              <span>{saving ? 'Saving Configuration...' : 'Save Rule Configuration'}</span>
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="submit"
+                disabled={saving || !isWeightValid}
+                className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-semibold rounded-xl text-xs shadow-md transition flex items-center gap-2 cursor-pointer"
+              >
+                {saving ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>{saving ? 'Saving Configuration...' : 'Save Rule Configuration'}</span>
+              </button>
+            </div>
+          )}
         </form>
       )}
     </div>

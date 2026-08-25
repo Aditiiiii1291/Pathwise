@@ -17,11 +17,11 @@ os.environ.setdefault("REFRESH_TOKEN_EXPIRE_DAYS", "7")
 @pytest.fixture(autouse=True)
 def default_auth_override(request):
     """
-    For domain and business logic tests outside test_auth.py, inject an active ADMIN user
-    so business logic tests run as authenticated institutional staff.
-    test_auth.py explicitly tests real unauthenticated 401s, token verification, and RBAC.
+    For domain logic tests outside test_auth.py and test_e2e_integration.py,
+    inject an active ADMIN user so business logic tests run as authenticated institutional staff.
+    Authentication and E2E suites explicitly test raw JWT authentication, 401s, and RBAC.
     """
-    if "test_auth" in request.node.nodeid:
+    if "test_auth" in request.node.nodeid or "test_e2e" in request.node.nodeid:
         yield
         return
 

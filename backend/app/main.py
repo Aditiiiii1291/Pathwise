@@ -28,11 +28,17 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS configuration for local development
-origins = [
+# CORS configuration supporting configurable environment origins for deployment
+default_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:3000",
 ]
+custom_origins_env = os.getenv("FRONTEND_ORIGINS")
+if custom_origins_env:
+    origins = [origin.strip() for origin in custom_origins_env.split(",") if origin.strip()]
+else:
+    origins = default_origins
 
 app.add_middleware(
     CORSMiddleware,

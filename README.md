@@ -22,73 +22,98 @@ DETECT → EXPLAIN → INTERVENE → TRACK
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React (Vite), Tailwind CSS, Recharts (visualizations)
-- **Backend**: FastAPI (Python), SQLAlchemy (ORM), SQLite (default local DB)
-- **Data & ML**: Pandas, NumPy, openpyxl, scikit-learn (Random Forest Classifier)
-- **Testing**: pytest
+- **Frontend**: React (Vite), Tailwind CSS, Lucide Icons, Recharts
+- **Backend**: FastAPI (Python 3.12), SQLAlchemy (ORM), SQLite
+- **Authentication**: JWT Access Tokens + Rotating Refresh Tokens, Argon2id password hashing, RBAC (`ADMIN`, `MENTOR`, `COUNSELLOR`)
+- **Data & ML**: Pandas, NumPy, openpyxl, Scikit-Learn (Random Forest Dropout Classifier)
+- **Containerization**: Docker (multi-stage build), Docker Compose, Nginx
+- **Testing**: pytest (194 automated test cases)
 
 ---
 
-## 📂 Installation & Setup
+## 📂 Quick Start & Setup
 
-### 1. Prerequisite Installations
-Ensure you have the following installed on your machine:
-- **Python 3.10+**
-- **Node.js 18+ & npm 9+**
-- **Git**
+### 1. Prerequisites
+- **Python 3.12+**
+- **Node.js 20+ & npm 10+**
+- **Docker & Docker Compose** (Optional)
 
-### 2. Clone and Setup Environment
+### 2. Clone and Configure
 ```bash
 git clone <your-repo-url> pathwise
 cd pathwise
 copy .env.example .env
+```
+Set a strong `JWT_SECRET_KEY` in `.env` (min 32 characters):
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(64))"
 ```
 
 ### 3. Backend Setup
 ```bash
 cd backend
 python -m venv .venv
-# On Windows
+# On Windows:
 .venv\Scripts\activate
-# On Linux/macOS
+# On Linux/macOS:
 source .venv/bin/activate
 
 pip install -r requirements.txt
 ```
 
-### 4. Generate Synthetic Data & Train ML Model
-For development and demonstration purposes, you can generate 500 mock student profiles showing various trajectories (Improving, Stable, Gradually/Rapidly Deteriorating, Academic/Financial-only concerns):
+### 4. Initialize Database & Seed Cohort Data
+To seed a 500-student synthetic cohort with baseline risk assessments:
 ```bash
-cd ../ml
-python -m data_generation.generator
-python -m training.train
+python -m app.scripts.seed_demo_data
 ```
 
-### 5. Start Backend Service
+To create the initial institutional administrator account:
 ```bash
-cd ../backend
-uvicorn app.main:app --reload
+python -m app.scripts.create_admin
 ```
-The API Swagger documentation will be available at `http://127.0.0.1:8000/docs`.
 
-### 6. Frontend Setup
+### 5. Start Backend Server
+```bash
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+API Documentation is live at `http://127.0.0.1:8000/docs` and Health at `http://127.0.0.1:8000/health`.
+
+### 6. Start Frontend Application
 ```bash
 cd ../frontend
 npm install
 npm run dev
 ```
-The client app will be running at `http://localhost:5173`.
+Open `http://localhost:5173` in your browser.
 
 ---
 
-## 🧪 Running Tests
-Verify the installation by running backend test files:
+## 🐳 Docker Deployment
+
+To run the complete platform in isolated containers:
+```bash
+docker compose build
+docker compose up -d
+```
+- **Frontend App:** `http://localhost:3000`
+- **Backend API:** `http://localhost:8000`
+
+---
+
+## 🧪 Automated Testing
+
+Execute the complete regression test suite (194 tests covering rules, ML, fusion, interventions, notifications, and security):
 ```bash
 cd backend
-pytest
+python -m pytest tests -v
 ```
 
 ---
 
+## 📖 Deployment Documentation
+For production cloud deployment guidelines (e.g. Render, Railway, Docker), persistent volume configuration, and security controls, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+---
+
 ## 📜 License
-This project is developed for hackathon purposes. Feel free to copy, modify, and self-host under public license settings.
+This project is developed for hackathon and institutional retention research purposes.
