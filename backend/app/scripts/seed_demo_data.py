@@ -74,13 +74,27 @@ def seed_academic_cohort(db) -> int:
                 ingestion.ingest(dtype, filename, f.read())
 
     print("[+] Computing initial baseline RiskSnapshots for cohort...")
-    predictor = MLPredictor()
+    predictor = None
+    try:
+        predictor = MLPredictor()
+        print("[+] Trained ML model artifact loaded for cohort risk inference.")
+    except FileNotFoundError as e:
+        print(f"[i] Trained ML model artifact not found in container environment ({e}).")
+        print("[i] Using deterministic baseline risk probability derived from rule evaluation for demo seeding.")
+
     for student in db.query(Student).all():
         profile = StudentDataFusionService(db).fuse_by_id(student.id)
         if profile:
             features = FeatureEngineeringService.extract_features(profile)
             rule_res = RuleEngine.evaluate(features)
-            ml_prob = predictor.predict_dropout_probability(features)
+
+            if predictor is not None:
+                ml_prob = predictor.predict_dropout_probability(features)
+            else:
+                # Deterministic demo fallback derived safely from normalized rule evaluation
+                raw_prob = rule_res.rule_score / 100.0
+                ml_prob = round(float(min(1.0, max(0.0, raw_prob))), 4)
+
             fusion_res = RiskFusionEngine.fuse(student.id, rule_res.rule_score, ml_prob, features)
             snapshot = RiskFusionEngine.to_risk_snapshot(fusion_res)
             db.add(snapshot)
