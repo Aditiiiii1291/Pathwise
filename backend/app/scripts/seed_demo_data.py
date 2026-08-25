@@ -14,6 +14,7 @@ from app.core.database import SessionLocal, init_db
 from app.models.user import User, UserRoleEnum
 from app.models.student import Student
 from app.models.mentor import Mentor
+from app.models.risk import RiskSnapshot
 from app.services.ingestion import IngestionService
 from app.services.fusion import StudentDataFusionService
 from app.services.features import FeatureEngineeringService
@@ -31,23 +32,44 @@ except ImportError:
     except ImportError:
         SyntheticDataGenerator = None
 
+DEFAULT_MENTORS = [
+    {"id": 1, "name": "Dr. Grace Hopper", "email": "hopper@institute.edu", "department": "CSE", "phone": "+919876543201"},
+    {"id": 2, "name": "Dr. Alan Turing", "email": "turing@institute.edu", "department": "CSE", "phone": "+919876543202"},
+    {"id": 3, "name": "Dr. Ada Lovelace", "email": "lovelace@institute.edu", "department": "CSE", "phone": "+919876543203"},
+    {"id": 4, "name": "Dr. Claude Shannon", "email": "shannon@institute.edu", "department": "ECE", "phone": "+919876543204"},
+    {"id": 5, "name": "Dr. Heinrich Hertz", "email": "hertz@institute.edu", "department": "ECE", "phone": "+919876543205"},
+    {"id": 6, "name": "Dr. Nikola Tesla", "email": "tesla@institute.edu", "department": "ECE", "phone": "+919876543206"},
+    {"id": 7, "name": "Dr. James Watt", "email": "watt@institute.edu", "department": "ME", "phone": "+919876543207"},
+    {"id": 8, "name": "Dr. Rudolf Diesel", "email": "diesel@institute.edu", "department": "ME", "phone": "+919876543208"},
+    {"id": 9, "name": "Dr. Sadi Carnot", "email": "carnot@institute.edu", "department": "ME", "phone": "+919876543209"},
+    {"id": 10, "name": "Dr. Thomas Telford", "email": "telford@institute.edu", "department": "CE", "phone": "+919876543210"},
+    {"id": 11, "name": "Dr. Gustave Eiffel", "email": "eiffel@institute.edu", "department": "CE", "phone": "+919876543211"},
+    {"id": 12, "name": "Dr. Isambard Brunel", "email": "brunel@institute.edu", "department": "CE", "phone": "+919876543212"},
+    {"id": 13, "name": "Dr. Michael Faraday", "email": "faraday@institute.edu", "department": "EEE", "phone": "+919876543213"},
+    {"id": 14, "name": "Dr. James Maxwell", "email": "maxwell@institute.edu", "department": "EEE", "phone": "+919876543214"},
+    {"id": 15, "name": "Dr. George Westinghouse", "email": "westinghouse@institute.edu", "department": "EEE", "phone": "+919876543215"},
+]
+
 
 def seed_academic_cohort(db) -> int:
     """
-    Seeds database with 500 synthetic students and baseline risk snapshots if empty.
+    Seeds database with 15 department faculty mentors, 500 synthetic students,
+    and baseline risk snapshots if empty.
     Idempotent: skips if students already exist.
     """
-    # Ensure default faculty mentor record exists
-    mentor_1 = db.query(Mentor).filter(Mentor.id == 1).first()
-    if not mentor_1:
-        mentor_1 = Mentor(
-            id=1,
-            name="Dr. Grace Hopper",
-            email="hopper@institute.edu",
-            department="CSE",
-        )
-        db.add(mentor_1)
-        db.commit()
+    # Ensure default faculty mentor records exist for all potential mentor IDs (1-15)
+    for m_data in DEFAULT_MENTORS:
+        mentor = db.query(Mentor).filter((Mentor.id == m_data["id"]) | (Mentor.email == m_data["email"])).first()
+        if not mentor:
+            mentor = Mentor(
+                id=m_data["id"],
+                name=m_data["name"],
+                email=m_data["email"],
+                department=m_data["department"],
+                phone=m_data.get("phone"),
+            )
+            db.add(mentor)
+    db.commit()
 
     student_count = db.query(Student).count()
     if student_count > 0:
@@ -71,7 +93,22 @@ def seed_academic_cohort(db) -> int:
         ]:
             file_path = os.path.join(temp_dir, filename)
             with open(file_path, "rb") as f:
-                ingestion.ingest(dtype, filename, f.read())
+                content = f.read()
+            summary = ingestion.ingest(dtype, filename, content)
+            if summary.errors or summary.inserted_rows == 0:
+                err_msgs = "; ".join([e.message for e in summary.errors])
+                raise RuntimeError(
+                    f"Ingestion failed for '{filename}' ({dtype}): "
+                    f"inserted {summary.inserted_rows}/{summary.total_rows} rows. Errors: {err_msgs}"
+                )
+            print(f"  [+] Ingested {summary.inserted_rows} rows from {filename}")
+
+    # Verify student count before proceeding to risk computation
+    student_count = db.query(Student).count()
+    if student_count != 500:
+        raise RuntimeError(
+            f"Academic cohort ingestion verification failed: expected 500 students, found {student_count}."
+        )
 
     print("[+] Computing initial baseline RiskSnapshots for cohort...")
     predictor = None
@@ -99,7 +136,15 @@ def seed_academic_cohort(db) -> int:
             snapshot = RiskFusionEngine.to_risk_snapshot(fusion_res)
             db.add(snapshot)
     db.commit()
-    return db.query(Student).count()
+
+    final_student_count = db.query(Student).count()
+    final_snapshot_count = db.query(RiskSnapshot).count()
+    if final_student_count != 500:
+        raise RuntimeError(f"Academic dataset verification failed: expected 500 students, found {final_student_count}.")
+    if final_snapshot_count != 500:
+        raise RuntimeError(f"Risk snapshots verification failed: expected 500 snapshots, found {final_snapshot_count}.")
+
+    return final_student_count
 
 
 def seed_demo_staff_accounts(db, demo_password: str):
@@ -151,6 +196,8 @@ def main():
     db = SessionLocal()
     try:
         count = seed_academic_cohort(db)
+        if count != 500:
+            raise RuntimeError(f"Seeding verification failed: student count is {count}, expected 500.")
         print(f"\n[+] Academic dataset verified ({count} student records present).")
 
         if args.staff_password:
@@ -162,6 +209,9 @@ def main():
         print("=" * 60)
         print("  Note: Administrator accounts must be created using:")
         print("    python -m app.scripts.create_admin\n")
+    except Exception as e:
+        print(f"\n[!] FATAL ERROR: Academic cohort seeding failed: {e}", file=sys.stderr)
+        sys.exit(1)
     finally:
         db.close()
 

@@ -69,7 +69,7 @@ def test_seed_academic_cohort_in_isolated_backend_context():
         count = seed_academic_cohort(db)
         assert count == 500
         assert db.query(Student).count() == 500
-        assert db.query(Mentor).count() == 1
+        assert db.query(Mentor).count() == 15
         assert db.query(RiskSnapshot).count() == 500
 
         # Verify idempotency on immediate second run
